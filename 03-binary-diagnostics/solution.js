@@ -48,11 +48,11 @@ const find_least = (ls, i = 0) => {
 }
 
 (() => {
-  let now = Date.now()
+  const now = Date.now()
   lines.sort()
-  let co2 = find_least(lines)
-  let oxygen = find_most(lines)
-  let answer = co2 * oxygen
-  let time = Date.now() - now
+  const co2 = find_least(lines)
+  const oxygen = find_most(lines)
+  const answer = co2 * oxygen
+  const time = Date.now() - now
   console.log(`part 2: `, { co2, oxygen, answer, time })
 })()
