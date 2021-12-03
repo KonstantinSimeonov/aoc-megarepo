@@ -19,10 +19,8 @@ begin
         end loop;
     end loop;
     for i in array_lower(sums, 1)..array_upper(sums, 1) loop
-        epsilon := epsilon * 2;
-        gamma := gamma * 2;
-        epsilon := epsilon + (sums[i] * 2 >= cardinality(xs))::int;
-        gamma := gamma + (sums[i] * 2 < cardinality(xs))::int;
+        epsilon := epsilon * 2 + (sums[i] * 2 >= cardinality(xs))::int;
+        gamma := gamma * 2 + (sums[i] * 2 < cardinality(xs))::int;
     end loop;
     raise notice 'epsilon: %, gamma: %, part 1: %', epsilon, gamma, epsilon * gamma;
 
