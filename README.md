@@ -7,3 +7,4 @@
 | 3   | https://adventofcode.com/2021/day/3 | [binary diagnostics](./03-binary-diagnostics) |
 | 4   | https://adventofcode.com/2021/day/4 | [bingo](./04-bingo) |
 | 5   | https://adventofcode.com/2021/day/5 | [hydrothermal venture](./05-hydrothermal-venture) |
+| 6   | https://adventofcode.com/2021/day/5 | [lanternfish](./06-lanternfish) |
