@@ -10,3 +10,4 @@
 | 4   | https://adventofcode.com/2021/day/4 | [bingo](./04-bingo) |
 | 5   | https://adventofcode.com/2021/day/5 | [hydrothermal venture](./05-hydrothermal-venture) |
 | 6   | https://adventofcode.com/2021/day/6 | [lanternfish](./06-lanternfish) |
+| 7   | https://adventofcode.com/2021/day/7 | [the treachery of whales](./07-the-treachery-of-whales) |
