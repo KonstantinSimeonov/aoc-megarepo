@@ -17,10 +17,9 @@ const is_low = (ascii, rows, y, x) =>
 
 const [part1, points]  = input.reduce(
   ([sum, all_lows], row, y, rows) => {
-    const lows = row.map(
-      (ascii, x) => [is_low(ascii, rows, y, x), ascii, [x, y]]
-    ).filter(x => x[0])
-
+    const lows = row
+      .map((ascii, x) => [is_low(ascii, rows, y, x), ascii, [x, y]])
+      .filter(x => x[0])
 
     const sum_lows = lows.reduce((row_sum, [, value]) => row_sum + value + 1, 0)
     return [sum + sum_lows, [...all_lows, ...lows.map(l => l[2])]]
@@ -30,22 +29,19 @@ const [part1, points]  = input.reduce(
 
 console.log(part1)
 
-const count_basin_for_point = (y, x, rows) => {
+const count_basin_for_point = rows => ([x, y]) => {
   if (rows[y][x] >= 9) return 0
-
-  const next = ds.map(([dx, dy]) => [x + dx, y + dy])
-    .filter(
-      ([nx, ny]) => rows[ny] && rows[ny][nx] && rows[ny][nx] !== 9
-    )
   rows[y][x] = 9
-  const s = next.map(([nx, ny]) => count_basin_for_point(ny, nx, rows)).reduce(
-    (sum, x) => sum + x, 0
-  )
 
-  return 1 + s
+  const sum = ds
+    .map(([dx, dy]) => [x + dx, y + dy])
+    .filter(([nx, ny]) => rows[ny] && rows[ny][nx] && rows[ny][nx] < 9)
+    .map(count_basin_for_point(rows))
+    .reduce((sum, x) => sum + x, 0)
+
+  return 1 + sum
 }
 
-const [a, b, c] = points.map(
-  ([x, y]) => count_basin_for_point(y, x, input)
-).sort((a, b) => b - a).slice(0, 3)
+const [a, b, c] = points.map(count_basin_for_point(input)).sort((a, b) => b - a)
+
 console.log(a * b * c)
