@@ -71,16 +71,18 @@ const step = gr => {
   return flashes
 }
 
-let total_flashes = 0
-for (let i = 1; i < 300; ++i) {
-  const new_f = step(grid)
-  total_flashes += new_f
-  if (i === 100) {
-    console.log({ part1: total_flashes })
-  }
+const solve = () => {
+  let total_flashes = 0
+  for (let i = 1; i < 300; ++i) {
+    const new_f = step(grid)
+    total_flashes += new_f
+    if (i === 100) {
+      console.log({ part1: total_flashes })
+    }
 
-  if (grid.flat(1).every(x => x === 0)) {
-    console.log({ part2: i })
-    break
+    if (grid.flat(1).every(x => x === 0)) {
+      console.log({ part2: i })
+      break
+    }
   }
 }
