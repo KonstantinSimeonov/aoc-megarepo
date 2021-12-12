@@ -50,15 +50,10 @@ const flash = (gr, x, y, visited = new Set) => {
   }
 }
 const step = gr => {
-  for (let y = 0; y < gr.length; ++y) {
-    for (let x = 0; x < gr[y].length; ++x) {
-      ++gr[y][x]
-    }
-  }
-
   const visited = new Set
   for (let y = 0; y < gr.length; ++y) {
     for (let x = 0; x < gr[y].length; ++x) {
+      ++gr[y][x]
       flash(gr, x, y, visited)
     }
   }
