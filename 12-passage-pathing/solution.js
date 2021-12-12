@@ -11,9 +11,11 @@ const solve = input => {
     {}
   )
 
-  const visit = (x, visited) => x.toLowerCase() === x ? { ...visited, [x]: (visited[x] || 0) + 1 } : visited
+  const visited = {}
+  const visit = x => visited[x] = (visited[x] || 0) + 1
+  const unvisit = x => visited[x]--
   const can_visit = (x, visited) => {
-    if (!(x in visited)) return true
+    if (!visited[x]) return true
     if (x === `start`) return false
     for (const key in visited) {
       if (visited[key] >= 2) return false
@@ -21,24 +23,27 @@ const solve = input => {
     return true
   }
 
-  const ps = []
+  let paths_count = 0
 
-  const calc_paths = (from, visited, path) => {
+  const calc_paths = from => {
     if (from === `end` || !mesh[from]) {
-      ps.push([...path, from])
+      ++paths_count
       return
     }
 
-    if (!can_visit(from, visited)) {
-      return
-    }
+    if (!can_visit(from, visited)) return
 
-    mesh[from].forEach(to => calc_paths(to, visit(from, visited), [...path, from]))
+    if (from.toLowerCase() === from) {
+      visit(from)
+      mesh[from].forEach(calc_paths)
+      unvisit(from)
+    } else
+      mesh[from].forEach(calc_paths)
   }
 
-  calc_paths(`start`, {}, [])
+  calc_paths(`start`)
 
-  return ps
+  return paths_count
 }
 
 const puzzle = `mj-TZ
@@ -66,4 +71,4 @@ vn-sb
 uw-vn
 uw-TZ`
 
-console.log(solve(puzzle).length)
+console.log(solve(puzzle))
