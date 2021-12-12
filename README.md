@@ -14,3 +14,4 @@
 | 8   | https://adventofcode.com/2021/day/8 | [seven segment search](./08-seven-segment-search) |
 | 9   | https://adventofcode.com/2021/day/9 | [smoke basin](./09-smoke-basin) |
 | 10   | https://adventofcode.com/2021/day/10 | [syntax scoring](./10-syntax-scoring) |
+| 11   | https://adventofcode.com/2021/day/11 | [dumbo octopus](./11-obligatory-game-of-life-spinoff) |
