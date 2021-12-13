@@ -19,26 +19,27 @@ foldPoint (foldx, foldy) (x, y) = (x', y')
 pretty :: S.Set (Int, Int) -> String
 pretty xs = L.intercalate "\n" points
   where
-    points = [ [if S.member (x, y) xs then '#' else '.' | x <- [0..cols] ] | y <- [0..rows] ]
+    points = [ [if S.member (x, y) xs then '█' else ' ' | x <- [0..cols] ] | y <- [0..rows] ]
     cols = maximum $ map fst ps
     rows = maximum $ map snd ps
     ps = S.toList xs
 
 parsePoints :: [T.Text] -> S.Set (Int, Int)
-parsePoints = S.fromList . map (\[x, y] -> (readInt x, readInt y)) . map (T.splitOn ",")
+parsePoints lines = S.fromList $ do
+  line <- lines
+  let [x, y] = T.splitOn "," line
+  pure (readInt x, readInt y)
 
 parseFolds :: [T.Text] -> [(Int, Int)]
-parseFolds foldsStr = fs
-  where
-    fsStrs = map (\[_, l] -> T.splitOn "=" l) $ map (T.splitOn " along ") foldsStr
-    fs = map (\[axis, value] ->
-          if axis == "x"
-            then (readInt value, maxBound)
-            else (maxBound, readInt value)
-        ) fsStrs
+parseFolds foldsStr = do
+  fold <- foldsStr
+  let [axis, value] = T.splitOn "=" fold
+  pure $ case axis of
+    "x" -> (readInt value, maxBound)
+    "y" -> (maxBound, readInt value)
 
 main = do
-  input <- T.stripEnd . T.pack <$> readFile "./input1"
+  input <- T.stripEnd . (T.replace "fold along " "") . T.pack <$> readFile "./input1"
   let [coordsStr, foldsStr] = map (T.splitOn "\n") $ T.splitOn "\n\n" input
   let points = parsePoints coordsStr
   let folds = parseFolds foldsStr
