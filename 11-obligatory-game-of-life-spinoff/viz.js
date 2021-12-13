@@ -22,7 +22,7 @@ const ctx = canvas.getContext(`2d`)
     }
   }
 
-  for (let i = 0; i < 1000; ++i) {
+  for (let i = 0; i < 300; ++i) {
     step(grid)
     render()
     label.innerText = i
