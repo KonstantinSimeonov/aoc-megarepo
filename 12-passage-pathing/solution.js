@@ -1,4 +1,6 @@
 const solve = input => {
+  const is_lower = xs => xs.charCodeAt(0) >= 97
+
   const mesh = input.split(`\n`).reduce(
     (m, pair) => {
       const [from, to] = pair.split(`-`)
@@ -14,31 +16,29 @@ const solve = input => {
   const visited = {}
   const visit = x => visited[x] = (visited[x] || 0) + 1
   const unvisit = x => visited[x]--
-  const can_visit = (x, visited) => {
+  const can_visit = x => {
     if (!visited[x]) return true
     if (x === `start`) return false
-    for (const key in visited) {
+    for (const key in visited)
       if (visited[key] >= 2) return false
-    }
+
     return true
   }
 
   let paths_count = 0
 
   const calc_paths = from => {
-    if (from === `end` || !mesh[from]) {
+    if (from === `end`) {
       ++paths_count
       return
     }
 
-    if (!can_visit(from, visited)) return
+    if (!can_visit(from)) return
 
-    if (from.toLowerCase() === from) {
-      visit(from)
-      mesh[from].forEach(calc_paths)
-      unvisit(from)
-    } else
-      mesh[from].forEach(calc_paths)
+    const lower = is_lower(from)
+    lower && visit(from)
+    mesh[from].forEach(calc_paths)
+    lower && unvisit(from)
   }
 
   calc_paths(`start`)
