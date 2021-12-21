@@ -21,3 +21,4 @@
 | [15](https://adventofcode.com/2021/day/15) | [chiton](./15-chiton) |
 | [16](https://adventofcode.com/2021/day/16) | [packet decoder](./16-packet-decoder) |
 | [17](https://adventofcode.com/2021/day/17) | [trick shot](./17-trick-shot) |
+| [18](https://adventofcode.com/2021/day/18) | [snailfish](./18-snailfish) |
