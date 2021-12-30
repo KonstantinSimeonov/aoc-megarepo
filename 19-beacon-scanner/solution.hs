@@ -38,7 +38,7 @@ overlap scanner0 scanner1 = case catMaybes $ concatMap id $ matches of
     s0 = S.fromList scanner0
     matches = do
         rotated1 <- brr scanner1
-        let !possibleTranslations = (<->) <$> scanner0 <*> rotated1
+        let possibleTranslations = (<->) <$> scanner0 <*> rotated1
         let translationMatches = do
             t <- possibleTranslations
             let translated1 = map ((<+>) t) rotated1
