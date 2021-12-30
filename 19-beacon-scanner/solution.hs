@@ -4,55 +4,91 @@ import Data.List.Split
 import Data.Maybe
 import Data.List
 import qualified Data.Set as S
+import qualified Data.Map as M
 
-type P3 = (Int, Int, Int)
+rotY (x, y, z) = (-z, y, x)
+rotX (x, y, z) = (x, -z, y)
 
-(<->) :: P3 -> P3 -> P3
+data Rot = RX | RY deriving (Show, Eq)
+
+rots = map snd $ M.toList stuff
+  where
+    stuff = foldl' (\m rs -> let fn = compose rs in M.insert (fn (1, 2, 3)) fn m) M.empty allRots
+    allRots = tail $ perm [RX, RX, RX] [RY, RY, RY] []
+    perm xs ys acc =
+      let xr = if null xs then [] else (perm (tail xs) ys ((head xs):acc))
+          yr = if null ys then [] else (perm xs (tail ys) ((head ys):acc))
+      in acc:(xr ++ yr)
+
+    compose [] = id
+    compose (RX:rs) = rotX . (compose rs)
+    compose (RY:rs) = rotY . (compose rs)
+
+brr xs = do
+  r <- rots
+  pure $ map r xs
+
 (a, b, c) <-> (d, e, f) = (a - d, b - e, c - f)
-
-(<+>) :: P3 -> P3 -> P3
 (a, b, c) <+> (d, e, f) = (a + d, b + e, c + f)
 
-(<**>) :: P3 -> P3 -> P3
-(a, b, c) <**> (d, e, f) = (a * d, b * e, c * f)
-
-brr xs = [ [ x' <**> (x, y, z) | x' <- xs ] | x <- [1, -1], y <- [1, -1], z <- [1, -1] ]
-
-hopt [] = Nothing
-hopt (x:_) = Just x
-
-overlap s0 s1 = hopt $ catMaybes $ concatMap id $ test
+overlap scanner0 scanner1 = case catMaybes $ concatMap id $ matches of
+  [] -> Nothing
+  (x:_) -> Just x
   where
-    x0 = S.fromList s0
-    test = do
-        a1 <- brr s1
-        let vs = (<->) <$> s0 <*> a1
-        let stuff = do
-            v <- vs
-            let ts = map ((<+>) v) a1
-            let (c, nc) = partition (\t -> S.member t x0) ts
-            pure $ if length c >= 12
-                then Just (S.union x0 $ S.fromList nc, (v, [0]))
+    s0 = S.fromList scanner0
+    matches = do
+        rotated1 <- brr scanner1
+        let !possibleTranslations = (<->) <$> scanner0 <*> rotated1
+        let translationMatches = do
+            t <- possibleTranslations
+            let translated1 = map ((<+>) t) rotated1
+            let (matching, rest) = partition (\p -> S.member p s0) translated1
+            pure $ if length matching >= 12
+                then Just (S.union s0 $ S.fromList rest, t)
                 else Nothing
-        pure stuff
+        pure translationMatches
 
-main = do
-  input <- init <$> readFile "./input"
-  let sc = do
+cartograph coords =
+  if null left
+  then (centers, mapped)
+  else let (centers', allMapped) = cartograph (mapped:left)
+       in (centers ++ centers', allMapped)
+  where
+    (mapped, (centers, left)) =
+      foldl' (\(scanner0, (centers, notMatched)) scanner1 ->
+                case overlap scanner0 scanner1 of
+                  Just (unified, center) -> (S.toList unified, (center:centers, notMatched))
+                  Nothing -> (scanner0, (centers, scanner1:notMatched))
+              ) (head coords, ([], [])) $ tail coords
+
+manhattan centers = maximum $ do
+  (x, y, z) <- xs
+  (a, b, c) <- xs
+  pure $ foldl1 (+) $ map abs [x - a, y - b, z - c]
+  where
+    xs = (0, 0, 0):(nub centers)
+
+readInput = do
+  input <- init <$> readFile "./input2"
+  let scanners = do
       s <- splitOn "\n\n" input
       pure $ tail $ do
         pts <- splitOn "\n" s :: [String]
         pure $ pts
-  let coords = do
-      s <- sc
+
+  let scannerCoords = do
+      s <- scanners
       pure $ do
         p <- s
         let [x, y, z] = map read $ splitOn "," p :: [Int]
         pure (x, y, z)
-  let scans = scanl' (\(s0, x) s1 ->
-                            case overlap s0 s1 of
-                              Just (s, y) -> (S.toList s, y)
-                              Nothing -> (s0, x)
-                    ) (head coords, ((0, 0, 0), [])) $ tail coords
-  putStrLn $ intercalate "\n" $ map (\x -> show x ++ "\n") $ scans
 
+  pure scannerCoords
+
+main = do
+  scanners <- readInput
+  let (centers, scans) = cartograph scanners
+  putStrLn $ intercalate "" $ map (\x -> show x ++ "\n") $ scans
+  print $ length $ scans
+  print centers
+  print $ manhattan centers
