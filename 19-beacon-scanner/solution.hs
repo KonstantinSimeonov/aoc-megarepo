@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 import Prelude
 import System.IO
 import Data.List.Split
@@ -6,8 +8,8 @@ import Data.List
 import qualified Data.Set as S
 import qualified Data.Map as M
 
-rotY (x, y, z) = (-z, y, x)
-rotX (x, y, z) = (x, -z, y)
+rotY (!x, !y, !z) = (-z, y, x)
+rotX (!x, !y, !z) = (x, -z, y)
 
 data Rot = RX | RY deriving (Show, Eq)
 
@@ -28,8 +30,8 @@ brr xs = do
   r <- rots
   pure $ map r xs
 
-(a, b, c) <-> (d, e, f) = (a - d, b - e, c - f)
-(a, b, c) <+> (d, e, f) = (a + d, b + e, c + f)
+(!a, !b, !c) <-> (!d, !e, !f) = (a - d, b - e, c - f)
+(!a, !b, !c) <+> (!d, !e, !f) = (a + d, b + e, c + f)
 
 overlap scanner0 scanner1 = case catMaybes $ concatMap id $ matches of
   [] -> Nothing
@@ -42,7 +44,7 @@ overlap scanner0 scanner1 = case catMaybes $ concatMap id $ matches of
         let translationMatches = do
             t <- possibleTranslations
             let translated1 = map ((<+>) t) rotated1
-            let (matching, rest) = partition (\p -> S.member p s0) translated1
+            let (!matching, !rest) = partition (\p -> S.member p s0) translated1
             pure $ if length matching >= 12
                 then Just (S.union s0 $ S.fromList rest, t)
                 else Nothing
@@ -55,9 +57,9 @@ cartograph coords =
        in (centers ++ centers', allMapped)
   where
     (mapped, (centers, left)) =
-      foldl' (\(scanner0, (centers, notMatched)) scanner1 ->
+      foldl' (\(!scanner0, (!centers, !notMatched)) !scanner1 ->
                 case overlap scanner0 scanner1 of
-                  Just (unified, center) -> (S.toList unified, (center:centers, notMatched))
+                  Just (!unified, !center) -> (S.toList unified, (center:centers, notMatched))
                   Nothing -> (scanner0, (centers, scanner1:notMatched))
               ) (head coords, ([], [])) $ tail coords
 
