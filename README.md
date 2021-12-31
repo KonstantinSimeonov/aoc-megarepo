@@ -22,3 +22,5 @@
 | [16](https://adventofcode.com/2021/day/16) | [packet decoder](./16-packet-decoder) |
 | [17](https://adventofcode.com/2021/day/17) | [trick shot](./17-trick-shot) |
 | [18](https://adventofcode.com/2021/day/18) | [snailfish](./18-snailfish) |
+| [19](https://adventofcode.com/2021/day/19) | [beacon scanner](./19-beacon-scanner) |
+| [20](https://adventofcode.com/2021/day/20) | [trench map](./20-trench-map) |
