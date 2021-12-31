@@ -24,3 +24,4 @@
 | [18](https://adventofcode.com/2021/day/18) | [snailfish](./18-snailfish) |
 | [19](https://adventofcode.com/2021/day/19) | [beacon scanner](./19-beacon-scanner) |
 | [20](https://adventofcode.com/2021/day/20) | [trench map](./20-trench-map) |
+| [21](https://adventofcode.com/2021/day/21) | [dirac dice](./21-dirac-dice) |
