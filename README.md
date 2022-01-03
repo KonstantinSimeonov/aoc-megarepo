@@ -25,3 +25,7 @@
 | [19](https://adventofcode.com/2021/day/19) | [beacon scanner](./19-beacon-scanner) |
 | [20](https://adventofcode.com/2021/day/20) | [trench map](./20-trench-map) |
 | [21](https://adventofcode.com/2021/day/21) | [dirac dice](./21-dirac-dice) |
+| [22](https://adventofcode.com/2021/day/22) | [reactor reboot](./22-reactor-reboot) |
+| [23](https://adventofcode.com/2021/day/23) | [amphipod](./23-amphipod) |
+| [24](https://adventofcode.com/2021/day/24) | [arithmetic logic unit](./24-alu) |
+| [25](https://adventofcode.com/2021/day/25) | [sea cucumber](./25-sea-cucumber) |
