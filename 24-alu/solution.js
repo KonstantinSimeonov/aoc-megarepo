@@ -10,27 +10,27 @@ const params = require(`fs`)
 
 const valid = []
 
-const solve = (params, stack, path) => {
+const solve = (params, stack, number) => {
   if (params.length === 0) {
-    if (stack.length === 0) valid.push(path.join(``))
+    if (stack === 0) valid.push(number)
 
     return
   }
 
   const [[d, add, elem], ...rest] = params
 
-  const x = (stack[stack.length - 1] || 0) % 26
-  if (d === 26) stack.pop()
+  const x = stack % 26
+  stack = stack / d | 0
 
   for (let w = 9; w >= 1; --w) {
     if (add > 0)
-      solve(rest, [...stack, w + elem], [...path, w])
+      solve(rest, stack * 26 + w + elem, number * 10 + w)
     else if (add + x === w)
-      solve(rest, stack, [...path, w])
+      solve(rest, stack, number * 10 + w)
   }
 }
 
-solve(params, [], [])
+solve(params, 0, 0)
 
 console.log(
 `part 1: ${valid[0]}
