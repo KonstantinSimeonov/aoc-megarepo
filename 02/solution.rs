@@ -4,6 +4,14 @@ fn byte_to_012(x: u8) -> u32 {
     ((x as u32) - 65) % 23
 }
 
+fn prev(x: u32) -> u32 {
+    (5 - x * 2) % 3
+}
+
+fn next(x: u32) -> u32 {
+    (x + 1) % 3
+}
+
 fn main() {
     let input = fs::read_to_string("./input")
         .expect("stuff");
@@ -22,10 +30,9 @@ fn main() {
         .map(|(ar, br)| {
             let a = *ar;
             match *br {
-                0 if a == 0 => 3,
-                0 => a,
+                0 => prev(a) + 1,
                 1 => a + 3 + 1,
-                2 => ((a + 1) % 3) + 6 + 1,
+                2 => next(a) + 6 + 1,
                 _ => 0
             }
         })
@@ -36,7 +43,7 @@ fn main() {
         .map(|(a, b)| {
             let bonus =
                 if a == b { 3 }
-                else if (a + 1) % 3 == b { 6 }
+                else if next(a) == b { 6 }
                 else { 0 };
 
             b + 1 + bonus
