@@ -8,19 +8,34 @@ fn main() {
     let input = fs::read_to_string("./input")
         .expect("stuff");
 
-    let result: u32 = input
+    let turns = input
         .trim()
         .lines()
         .map(|line| (
-            line.bytes().next().unwrap(),
-            line.bytes().last().unwrap()
+            byte_to_012(line.bytes().next().unwrap()),
+            byte_to_012(line.bytes().last().unwrap())
         ))
-        .map(|(xa, xb)| {
-            let a = byte_to_012(xa);
-            let b = byte_to_012(xb);
-            
+        .collect::<Vec<(u32, u32)>>();
+
+    let part2: u32 = turns
+        .iter()
+        .map(|(ar, br)| {
+            let a = *ar;
+            match *br {
+                0 if a == 0 => 3,
+                0 => a,
+                1 => a + 3 + 1,
+                2 => ((a + 1) % 3) + 6 + 1,
+                _ => 0
+            }
+        })
+        .sum();
+
+    let part1: u32 = turns
+        .into_iter()
+        .map(|(a, b)| {
             let bonus =
-                if a == b { 3  }
+                if a == b { 3 }
                 else if (a + 1) % 3 == b { 6 }
                 else { 0 };
 
@@ -28,5 +43,7 @@ fn main() {
         })
         .sum();
 
-    println!("{:?}", result)
+
+
+    println!("{} {}", part1, part2)
 }
