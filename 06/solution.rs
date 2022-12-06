@@ -1,6 +1,6 @@
 use std::fs;
 
-static XS: &'static [u128] = &[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101];
+static PRIMES: &'static [u128] = &[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101];
 
 fn find_start(s: &str, msg_size: usize) -> usize {
     let bytes = s
@@ -10,10 +10,10 @@ fn find_start(s: &str, msg_size: usize) -> usize {
     let start = bytes
         .windows(msg_size)
         .enumerate()
-        .find(|(i, wnd)| {
+        .find(|(_, codes)| {
             let mut prod: u128 = 1;
-            for b in *wnd {
-                let c = XS[(*b) as usize - 97];
+            for b in *codes {
+                let c = PRIMES[(*b) as usize - 97];
                 if prod % c == 0 {
                     return false
                 }
