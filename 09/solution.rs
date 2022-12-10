@@ -4,7 +4,6 @@ use std::fs;
 type P2 = (i32, i32);
 
 fn parse_move(s: &str) -> (P2, usize) {
-    let times = s[2..].parse::<usize>().unwrap();
     let deltas = match &s[0..1] {
         "U" => (0, -1),
         "D" => (0, 1),
@@ -13,45 +12,34 @@ fn parse_move(s: &str) -> (P2, usize) {
         _ => unreachable!(),
     };
 
+    let times = s[2..].parse::<usize>().unwrap();
     (deltas, times)
-}
-
-fn should_move((x1, y1): &P2, (x2, y2): &P2) -> bool {
-    (x1 - x2).abs() > 1 || (y1 - y2).abs() > 1
-}
-
-fn move_towards((destx, desty): &P2, (tx, ty): &P2) -> P2 {
-    let dx = (destx - tx).signum();
-    let dy = (desty - ty).signum();
-
-    (dx + tx, dy + ty)
 }
 
 fn main() {
     let input = fs::read_to_string("./input").expect("hurr durr");
+    let mut visited = HashSet::from([(0, 0)]);
+    let mut tails = vec![(0, 0); 10 /* chage to 2 for part 1 */];
 
-    let (visited, _) = input.lines().fold(
-        (
-            HashSet::from([(0, 0)]),
-            vec![(0, 0); 10 /* chage to 2 for part 1 */],
-        ),
-        |(mut visited, mut tails), l| {
-            let ((dx, dy), times) = parse_move(l);
-            for _ in 0..times {
-                tails[0].0 += dx;
-                tails[0].1 += dy;
+    for (dir, times) in input.lines().map(parse_move) {
+        for _ in 0..times {
+            tails[0].0 += dir.0;
+            tails[0].1 += dir.1;
 
-                for i in 1..tails.len() {
-                    if should_move(&tails[i - 1], &tails[i]) {
-                        tails[i] = move_towards(&tails[i - 1], &tails[i]);
-                    }
+            for i in 1..tails.len() {
+                let (to_x, to_y) = tails[i - 1];
+                let (x, y) = tails[i];
+                if (to_x - x).abs() > 1 || (to_y - y).abs() > 1 {
+                    tails[i] = (
+                        x + (to_x - x).signum(),
+                        y + (to_y - y).signum()
+                    );
                 }
-
-                visited.insert(*tails.last().unwrap());
             }
-            (visited, tails)
-        },
-    );
+
+            visited.insert(*tails.last().unwrap());
+        }
+    }
 
     //render(&visited.iter().cloned().collect::<Vec<P2>>());
     println!("{:?}", visited.len());
