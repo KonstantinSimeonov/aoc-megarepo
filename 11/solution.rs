@@ -9,22 +9,21 @@ struct Monkey {
     score: usize,
 }
 
-fn simulate_rounds(monkeys: &mut Vec<Monkey>, rounds: usize, calc_worry: &Fn(usize) -> usize) -> usize {
+fn simulate_rounds(ms: &mut Vec<Monkey>, rounds: usize, manage_worry: &Fn(usize) -> usize) -> usize {
     for _ in 0..rounds {
-        for i in 0..monkeys.len() {
-            monkeys[i].score += monkeys[i].items.len();
-            for _ in 0..monkeys[i].items.len() {
-                let item = monkeys[i].items.pop_front().unwrap();
-                let worry = calc_worry((monkeys[i].op)(item));
-                let target = monkeys[i].targets[(worry % monkeys[i].test != 0) as usize];
-                monkeys[target].items.push_back(worry);
+        for i in 0..ms.len() {
+            ms[i].score += ms[i].items.len();
+            while let Some(item) = ms[i].items.pop_front() {
+                let worry = manage_worry((ms[i].op)(item));
+                let target = ms[i].targets[(worry % ms[i].test != 0) as usize];
+                ms[target].items.push_back(worry);
             }
         }
     }
 
-    monkeys.sort_by(|a, b| b.score.cmp(&a.score));
+    ms.sort_by(|a, b| b.score.cmp(&a.score));
 
-    if let [m1, m2] = &monkeys[0..2] {
+    if let [m1, m2] = &ms[0..2] {
         m1.score * m2.score
     } else {
         unreachable!();
