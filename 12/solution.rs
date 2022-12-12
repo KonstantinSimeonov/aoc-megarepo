@@ -1,6 +1,9 @@
 use std::fs;
 use std::collections::VecDeque;
 
+
+static V: u8 = b'A';
+
 fn main() {
     let input = fs::read_to_string("./input").expect("omegalol");
 
@@ -12,11 +15,12 @@ fn main() {
             for x in 0..grid[y].len() {
                 match grid[y][x] {
                     b'S' => {
-                        grid[y][x] = b'a' - 1;
-                        res = Some((y, x, 0));
+                        grid[y][x] = b'a';
+                        //res = Some((y, x, 0));
                     },
                     b'E' => {
-                        grid[y][x] = b'z' + 1;
+                        grid[y][x] = b'z';
+                        res = Some((y, x, 0));
                     },
                     _ => {},
                 }
@@ -35,32 +39,22 @@ fn main() {
         (-1, 0)
     ];
 
-    let mut step = 0;
-    grid[0][0] = 251;
 
     while let Some((y, x, dist)) = nodes.pop_front() {
-        if grid[y][x] == b'z' + 1 {
+        if grid[y][x] == b'a' {
             result = Some(dist);
             break;
         }
 
-        if grid[y][x] == 250 {
+        if grid[y][x] == V {
             continue;
         }
 
         let lvl = grid[y][x];
 
-        step += 1;
-        println!("step {}", step);
-        for row in &grid {
-            println!("{}", row.iter().map(|&x| if x == 250 { '.' } else { x as char }).collect::<String>());
-        }
-
         for (dy, dx) in deltas {
             let ny = dy + (y as i32);
             let nx = dx + (x as i32);
-
-            //println!("{:?}", (x, y, nx, ny));
 
             if nx < 0 || ny < 0 {
                 continue;
@@ -73,14 +67,12 @@ fn main() {
                 continue;
             }
 
-            println!("inspect {:?}", (grid[sy][sx], lvl, sy, sx));
-            if grid[sy][sx] <= lvl + 1 && grid[sy][sx] != 250 {
-                println!("{:?}", (grid[sy][sx] as char, lvl as char, grid[sy][sx], lvl));
+            if grid[sy][sx] >= lvl - 1 && grid[sy][sx] != V {
                 nodes.push_back((sy, sx, dist + 1));
             }
         }
 
-        grid[y][x] = 250;
+        grid[y][x] = V;
     }
 
     println!("{:?}", result);
