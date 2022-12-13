@@ -1,13 +1,17 @@
-use std::fs;
 use std::collections::VecDeque;
+use std::fs;
 
-
-static V: u8 = b'A';
+static VISITED: u8 = 128;
+static LVL: u8 = 127;
+static DELTAS: &[(i32, i32)] = &[(0, 1), (0, -1), (1, 0), (-1, 0)];
 
 fn main() {
     let input = fs::read_to_string("./input").expect("omegalol");
 
-    let mut grid = input.lines().map(|line| line.bytes().collect()).collect::<Vec<Vec<u8>>>();
+    let mut grid = input
+        .lines()
+        .map(|line| line.bytes().collect())
+        .collect::<Vec<Vec<u8>>>();
 
     let start = {
         let mut res: Option<(usize, usize, i32)> = None;
@@ -17,12 +21,12 @@ fn main() {
                     b'S' => {
                         grid[y][x] = b'a';
                         //res = Some((y, x, 0));
-                    },
+                    }
                     b'E' => {
                         grid[y][x] = b'z';
                         res = Some((y, x, 0));
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 }
             }
         }
@@ -31,28 +35,17 @@ fn main() {
     };
 
     let mut nodes = VecDeque::from([start]);
-    let mut result: Option<i32> = None;
-    let deltas: &[(i32, i32)] = &[
-        (0, 1),
-        (0, -1),
-        (1, 0),
-        (-1, 0)
-    ];
 
+    grid[start.0][start.1] |= VISITED;
 
     while let Some((y, x, dist)) = nodes.pop_front() {
-        if grid[y][x] == b'a' {
-            result = Some(dist);
+        let lvl = grid[y][x] & LVL;
+        if lvl == b'a' {
+            println!("{}", dist);
             break;
         }
 
-        if grid[y][x] == V {
-            continue;
-        }
-
-        let lvl = grid[y][x];
-
-        for (dy, dx) in deltas {
+        for (dy, dx) in DELTAS {
             let ny = dy + (y as i32);
             let nx = dx + (x as i32);
 
@@ -67,15 +60,25 @@ fn main() {
                 continue;
             }
 
-            if grid[sy][sx] >= lvl - 1 && grid[sy][sx] != V {
+            if grid[sy][sx] & LVL >= lvl - 1 && grid[sy][sx] & VISITED == 0 {
                 nodes.push_back((sy, sx, dist + 1));
+                grid[sy][sx] |= VISITED;
             }
         }
 
-        grid[y][x] = V;
+        //render(&grid);
+    }
+}
+
+fn render(grid: &Vec<Vec<u8>>) {
+    for row in grid {
+        println!(
+            "{}",
+            row.iter()
+                .map(|&c| if c & VISITED > 0 { '.' } else { c as char })
+                .collect::<String>()
+        )
     }
 
-    println!("{:?}", result);
-
-
+    println!("\n")
 }
