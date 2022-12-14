@@ -39,8 +39,6 @@ fn main() {
             let dx = (ex - sx).signum();
             let dy = (ey - sy).signum();
 
-            //println!("{:?}", (sx, sy, ex, ey, dx, dy));
-
             while sx != ex || sy != ey {
                 grid[sy as usize][(sx - minx + off) as usize] = '#';
                 sy += dy;
@@ -59,19 +57,15 @@ fn main() {
         grid[k - 1][x] = '#';
     }
 
-    //println!("{:?}", grid);
     let mut s = 0;
     while let Some((x, y)) = step(&grid, (startx as usize, 0)) {
         if grid[y][x] == '+' { break; }
         grid[y][x] = 'o';
-        //println!("saccess");
 
         //render(&grid);
         //println!("\n");
         s += 1;
     }
-
-    //step(&grid, (startx as usize, 0));
 
     render(&grid);
 
@@ -81,7 +75,6 @@ fn main() {
 fn step(grid: &Vec<Vec<char>>, (mut x, mut y): (usize, usize)) -> Option<(usize, usize)> {
     loop {
         if y >= grid.len() || x == 0 || x >= grid[0].len() {
-            //println!("{:?}", (x, y));
             return None
         }
 
@@ -96,30 +89,11 @@ fn step(grid: &Vec<Vec<char>>, (mut x, mut y): (usize, usize)) -> Option<(usize,
             return Some((x, y))
         };
 
-        //println!("{:?}", (grid[y + 1][x], grid[y + 1][x - 1], grid[y + 1][x + 1], new_col));
         x = new_col;
         y += 1;
-        //match new_col {
-        //    nx => {
-        //        x = nx;
-        //        y += 1;
-        //    },
-        //    None => return Some((x, y))
-        //}
     }
 }
 
 fn render(grid: &Vec<Vec<char>>) {
     println!("{}", grid.iter().map(|row| row.iter().collect::<String>()).collect::<Vec<String>>().join("\n"))
 }
-
-//fn render(rocks: &HashSet<(i32, i32)>) {
-//
-//
-//    for y in 0..(maxy + 1) {
-//        let line = (minx..(maxx + 1)).map(|x| if rocks.contains(&(x, y)) { '#' } else { '.' }).collect::<String>();
-//
-//        println!("{}", line)
-//    }
-//
-//}
