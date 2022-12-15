@@ -55,10 +55,11 @@ fn main() {
             })
             .collect::<Vec<_>>();
 
+        let first_range = run_range(&pairs, 0, max / l);
         let result = threads
             .into_iter()
             .find_map(|t| t.join().unwrap())
-            .or(run_range(&pairs, 0, max / l));
+            .or(first_range);
 
         result
     };
