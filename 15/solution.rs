@@ -1,9 +1,14 @@
-use std::{fs, collections::HashSet};
+use std::{fs, collections::HashSet, cmp};
 
 type P2 = (i32, i32);
 
 fn main() {
-    let input = fs::read_to_string("./input").expect("something");
+    let (file, y) = [
+        ("./input0", 10),
+        ("./input", 2000000)
+    ][1];
+
+    let input = fs::read_to_string(file).expect("something");
 
     let pairs = input
         .trim_end()
@@ -25,20 +30,46 @@ fn main() {
         })
         .collect::<Vec<(P2, P2)>>();
 
-    //println!("{:?}", pairs);
+    let part1 = calc_empty(y, &pairs);
+    println!("part 1: {}", part1)
+}
 
-    let y = 2000000;
+fn calc_empty(y: i32, pairs: &Vec<(P2, P2)>) -> i32 {
     let mut all = pairs.iter().filter_map(|p| isect(y, p)).collect::<Vec<P2>>();
 
     all.sort();
 
-    let bs = pairs.iter().filter_map(|(_, (bx, by))| if *by == y { Some(bx) } else { None });
-    let mut hs = all.iter().flat_map(|r| (r.0..r.1 + 1)).collect::<HashSet<i32>>();
+    let xs = all
+        .iter()
+        .fold(vec![], |mut rs, (s, e)| {
+            let l = rs.len();
+            if l == 0 {
+                rs.push((s, e));
+                rs
+            } else {
+                let (s1, e1) = rs.last().unwrap();
 
-    for beacon in bs.clone() {
-        hs.remove(beacon);
-    }
-    println!("{:?}", (hs.len()))
+                if e1 >= &s {
+                    rs[l - 1] = (s1, cmp::max(e1, e));
+                } else {
+                    rs.push((s, e));
+                }
+
+                rs
+            }
+        });
+
+    let beacon_xs = pairs
+        .iter()
+        .filter_map(|(_, (bx, by))| if *by == y { Some((bx, by)) } else { None })
+        .filter(|(bx, _)| xs.iter().any(|(s, e)| s <= bx && bx <= e))
+        .collect::<HashSet<_>>();
+
+    let part1 = xs
+        .iter()
+        .fold(0, |sum, (&s, &e)| sum + e - s + 1) - beacon_xs.len() as i32;
+
+    part1
 }
 
 fn isect(y: i32, (s, b): &(P2, P2)) -> Option<P2> {
