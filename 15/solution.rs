@@ -1,4 +1,5 @@
 use std::{cmp, collections::HashSet, fs};
+use std::thread;
 
 type P2 = (i32, i32);
 
@@ -43,20 +44,42 @@ fn main() {
     println!("part 1: {}", part1);
 
     let part2 = {
-        let (dbx, dby) = (0..max + 1).find_map(|ty| {
-            let xs = calc_empty(ty, &pairs);
+        let l = thread::available_parallelism().unwrap().get();
+        let threads = (1..l)
+            .map(|i| {
+                let start = i * max / l;
+                let end = (i + 1) * max / l;
+
+                let ps = pairs.clone();
+                thread::spawn(move || run_range(&ps, start, end))
+            })
+            .collect::<Vec<_>>();
+
+        let result = threads
+            .into_iter()
+            .find_map(|t| t.join().unwrap())
+            .or(run_range(&pairs, 0, max / l));
+
+        result
+    };
+    println!("{:?}", part2)
+}
+
+fn run_range(pairs: &Vec<(P2, P2)>, s: usize, e: usize) -> Option<u128> {
+    let res = (s..e).find_map(|ty| {
+            let xs = calc_empty(ty as i32, &pairs);
 
             match xs[..] {
                 [(_, e), _] => Some((e + 1, ty)),
                 _ => None
             }
-        }).unwrap();
+        });
 
+    res.map(|(dbx, dby)| {
         let x = dbx as u128;
         let y = dby as u128;
         (x * 4000000) + y
-    };
-    println!("{:?}", part2)
+    })
 }
 
 fn calc_empty(y: i32, pairs: &Vec<(P2, P2)>) -> Vec<(i32, i32)> {
