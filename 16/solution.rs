@@ -3,7 +3,7 @@ use std::fs;
 use std::cmp;
 
 fn main() {
-    let input = fs::read_to_string("./input0").expect("pipezzz boii");
+    let input = fs::read_to_string("./input").expect("pipezzz boii");
 
     let ps = input
         .lines()
@@ -30,17 +30,24 @@ fn main() {
         .collect::<HashMap<_, _>>();
 
     println!("{}, {:?}", graph.len(), graph);
-    //println!("{}", max_release_nice(&graph, "AA", 30, &mut HashSet::new()));
+    println!("{}", max_release_nice(&graph, "AA", 30, &mut HashSet::new(), &mut HashMap::new()));
     
 }
 
+// (1600..1626)
 fn max_release_nice<'a>(
-    net: &HashMap<&'a str, (i32, Vec<(&'a str, i32, i32)>)>,
+    net: &HashMap<&'a str, (i32, Vec<(&'a str, i32)>)>,
     current: &'a str,
     left: i32,
     turned: &mut HashSet<&'a str>,
+    cache: &mut HashMap<(i32, String, &'a str), i32>
 ) -> i32 {
-    if left <= 0 || turned.len() >= net.len() - 1 {
+    let key = turned.iter().map(|s| s.to_string()).collect::<String>();
+    if let Some(res) = cache.get(&(left, key.clone(), current)) {
+        return *res
+    }
+
+    if left <= 0 {
         return 0
     }
 
@@ -48,15 +55,13 @@ fn max_release_nice<'a>(
 
     let with = if turned.contains(current) {
         0
-    } else if left == 1 {
-        *rate
     } else {
         turned.insert(current);
         let l = left - 1;
         let p = rate * l;
         let press = next
             .iter()
-            .map(|(name, r, cost)| max_release_nice(net, name, l - cost, turned))
+            .map(|(name, cost)| max_release_nice(net, name, l - cost, turned, cache))
             .max()
             .unwrap();
 
@@ -67,20 +72,23 @@ fn max_release_nice<'a>(
 
     let without = next
         .iter()
-        .map(|(name, r, cost)| max_release_nice(net, name, left - cost, turned))
+        .map(|(name, cost)| max_release_nice(net, name, left - cost, turned, cache))
         .max()
         .unwrap();
 
-    cmp::max(with, without)
+    let res = cmp::max(with, without);
+    cache.insert((left, key, current), res);
+
+    res
 }
 
 fn neighbs<'a>(
     net: &HashMap<&str, (i32, Vec<&'a str>)>,
     current: &'a str
-) -> (i32, HashMap<&'a str, i32>) {
+) -> (i32, Vec<(&'a str, i32)>) {
     let mut visited = HashSet::new();
     let mut nodes = VecDeque::from([(current, 0)]);
-    let mut result = HashMap::new();
+    let mut result = Vec::new();
     let (rate, _) = net.get(current).unwrap();
 
     visited.insert(current);
@@ -88,7 +96,7 @@ fn neighbs<'a>(
     while let Some((c, dist)) = nodes.pop_front() {
         let (r, cs) = net.get(c).unwrap();
         if *r != 0 && c != current {
-            result.insert(c, dist);
+            result.push((c, dist));
         }
 
         for c in cs.iter() {
