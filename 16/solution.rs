@@ -31,7 +31,7 @@ fn main() {
 
     println!("{}, {:?}", graph.len(), graph);
     println!("{}", max_release_nice(&graph, "AA", 30, &mut HashSet::new(), &mut HashMap::new()));
-    
+
 }
 
 // (1600..1626)
@@ -47,7 +47,7 @@ fn max_release_nice<'a>(
         return *res
     }
 
-    if left <= 0 {
+    if left <= 0 || turned.len() == net.len() {
         return 0
     }
 
@@ -61,7 +61,7 @@ fn max_release_nice<'a>(
         let p = rate * l;
         let press = next
             .iter()
-            .map(|(name, cost)| max_release_nice(net, name, l - cost, turned, cache))
+            .map(|(name, cost)| if turned.contains(name) { 0 } else { max_release_nice(net, name, l - cost, turned, cache) })
             .max()
             .unwrap();
 
@@ -72,7 +72,7 @@ fn max_release_nice<'a>(
 
     let without = next
         .iter()
-        .map(|(name, cost)| max_release_nice(net, name, left - cost, turned, cache))
+        .map(|(name, cost)| if turned.contains(name) { 0 } else { max_release_nice(net, name, left - cost, turned, cache) })
         .max()
         .unwrap();
 
