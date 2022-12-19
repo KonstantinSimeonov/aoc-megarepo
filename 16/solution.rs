@@ -22,10 +22,9 @@ fn main() {
         })
         .collect::<HashMap<_, _>>();
 
-    println!(
-        "part1: {}",
-        run_all_paths(&graph, 1, 30, 0, 0, &mut HashMap::new())
-    );
+    let mut paths1 = HashMap::new();
+    run_all_paths(&graph, 1, 30, 0, 0, &mut paths1);
+    println!("part1: {:?}", paths1.values().max());
 
     let mut all_path_scores = HashMap::new();
     run_all_paths(&graph, 1, 26, 0, 0, &mut all_path_scores);
@@ -108,35 +107,27 @@ fn run_all_paths<'a>(
     turned: i32,
     score: i32,
     ps: &mut HashMap<i32, i32>,
-) -> i32 {
-    let (_, next) = graph.get(&current).unwrap();
-
+) {
+    let (_, paths) = graph.get(&current).unwrap();
     let new_turned = insert(turned, current);
 
     ps.entry(new_turned)
         .and_modify(|x| *x = cmp::max(*x, score))
         .or_insert(score);
 
-    let result = next
-        .iter()
-        .filter_map(|(node, cost, rate)| {
-            if has(new_turned, *node) {
-                return None;
-            }
+    for (node, cost, rate) in paths.iter() {
+        if has(new_turned, *node) {
+            continue;
+        }
 
-            let new_left = left - cost - 1;
-            if new_left < 0 {
-                return None;
-            }
+        let new_left = left - cost - 1;
+        if new_left < 0 {
+            continue;
+        }
 
-            let released = rate * new_left;
-
-            Some(released + run_all_paths(graph, *node, new_left, new_turned, score + released, ps))
-        })
-        .max()
-        .unwrap_or(0);
-
-    result
+        let released = rate * new_left;
+        run_all_paths(graph, *node, new_left, new_turned, score + released, ps)
+    }
 }
 
 fn paths_to_all_other<'a>(graph: &RawGraph<'a>, from: &'a str) -> (i32, Vec<(&'a str, i32, i32)>) {
