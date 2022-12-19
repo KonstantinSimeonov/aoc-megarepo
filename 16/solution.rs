@@ -88,10 +88,6 @@ fn parse<'a>(input: &'a str) -> RawGraph {
     paths
 }
 
-fn rem(t: i32, c: i32) -> i32 {
-    t & !c
-}
-
 fn insert(t: i32, c: i32) -> i32 {
     //assert!(t < 1 << 16);
     //assert!(c < (1 << 16));
@@ -105,7 +101,6 @@ fn has(t: i32, c: i32) -> bool {
     t & c != 0
 }
 
-// (1600..1626)
 fn run_all_paths<'a>(
     graph: &SimplifiedGraph,
     current: i32,
