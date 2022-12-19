@@ -3,53 +3,23 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("./input").expect("pipezzz boii");
+    let input = fs::read_to_string("./input0").expect("pipezzz boii");
 
-    let mut cnt = 1;
-    let mut pipes_names = HashMap::new();
-    let mut add_key = |name: &str| -> i32 {
-        let k = if !pipes_names.contains_key(name) {
-            let old = cnt;
-            cnt *= 2;
-            pipes_names.insert(name.to_string(), old);
-            old
-        } else {
-            *pipes_names.get(name).unwrap()
-        };
+    let raw_graph = parse(&input);
 
-        k
-    };
-
-    let ps = parse(&input);
-
-    let mut ks = ps
-        .iter()
-        .filter_map(|(k, (rate, _))| {
-            if *rate == 0 && *k != "AA" {
-                None
-            } else {
-                Some(*k)
-            }
-        })
-        .collect::<Vec<_>>();
-
-    ks.sort();
-
-    for x in ks.iter() {
-        add_key(x);
-    }
+    let ks = valve_keys(&raw_graph);
 
     let graph = ks
         .iter()
-        .map(|k| {
-            let (rate, ns) = paths_to_all_other(&ps, k);
+        .map(|(string_key, i_key)| {
+            let (rate, ns) = paths_to_all_other(&raw_graph, string_key);
             //println!("{:?}", (k, add_key(k)));
             let keyed = ns
                 .iter()
-                .map(|(name, dist, rate)| (add_key(name), *dist, *rate))
+                .map(|(name, dist, rate)| (*ks.get(name).unwrap(), *dist, *rate))
                 .collect::<Vec<_>>();
 
-            (add_key(k), (rate, keyed))
+            (*i_key, (rate, keyed))
         })
         .collect::<HashMap<_, _>>();
 
@@ -73,6 +43,42 @@ fn main() {
 }
 
 type RawGraph<'a> = HashMap<&'a str, (i32, Vec<&'a str>)>;
+
+fn valve_keys<'a>(graph: &RawGraph<'a>) -> HashMap<&'a str, i32> {
+    let mut cnt = 1;
+    let mut pipes_names = HashMap::new();
+    let mut add_key = |name: &'a str| -> i32 {
+        let k = if !pipes_names.contains_key(name) {
+            let old = cnt;
+            cnt *= 2;
+            pipes_names.insert(name, old);
+            old
+        } else {
+            *pipes_names.get(name).unwrap()
+        };
+
+        k
+    };
+
+    let mut ks = graph
+        .iter()
+        .filter_map(|(k, (rate, _))| {
+            if *rate == 0 && *k != "AA" {
+                None
+            } else {
+                Some(*k)
+            }
+        })
+        .collect::<Vec<_>>();
+
+    ks.sort();
+
+    for x in ks.iter() {
+        add_key(x);
+    }
+
+    pipes_names
+}
 
 fn parse<'a>(input: &'a str) -> RawGraph {
     let paths = input
