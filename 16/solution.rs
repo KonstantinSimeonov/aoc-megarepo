@@ -42,7 +42,7 @@ fn main() {
     let graph = ks
         .iter()
         .map(|k| {
-            let (rate, ns) = neighbs(&ps, k);
+            let (rate, ns) = paths_to_all_other(&ps, k);
             //println!("{:?}", (k, add_key(k)));
             let keyed = ns
                 .iter()
@@ -152,30 +152,25 @@ fn run_all_paths<'a>(
     result
 }
 
-fn neighbs<'a>(
-    net: &RawGraph<'a>,
-    current: &'a str,
-) -> (i32, Vec<(&'a str, i32, i32)>) {
-    let mut visited = HashSet::new();
-    let mut nodes = VecDeque::from([(current, 0)]);
-    let mut result = Vec::new();
-    let (rate, _) = net.get(current).unwrap();
+fn paths_to_all_other<'a>(graph: &RawGraph<'a>, from: &'a str) -> (i32, Vec<(&'a str, i32, i32)>) {
+    let mut visited = HashSet::from([from]);
+    let mut nodes = VecDeque::from([(from, 0)]);
+    let mut paths = Vec::new();
+    let (from_rate, _) = graph.get(from).unwrap();
 
-    visited.insert(current);
-
-    while let Some((c, dist)) = nodes.pop_front() {
-        let (r, cs) = net.get(c).unwrap();
-        if *r != 0 && c != current {
-            result.push((c, dist, *r));
+    while let Some((current, distance)) = nodes.pop_front() {
+        let (rate, neighbs) = graph.get(current).unwrap();
+        if *rate != 0 && current != from {
+            paths.push((current, distance, *rate));
         }
 
-        for c in cs.iter() {
+        for c in neighbs.iter() {
             if !visited.contains(c) {
                 visited.insert(c);
-                nodes.push_back((c, dist + 1));
+                nodes.push_back((c, distance + 1));
             }
         }
     }
 
-    (*rate, result)
+    (*from_rate, paths)
 }
