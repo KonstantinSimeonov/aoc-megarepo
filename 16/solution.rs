@@ -2,6 +2,10 @@ use std::cmp;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 
+type RawGraph<'a> = HashMap<&'a str, (i32, Vec<&'a str>)>;
+
+type SimplifiedGraph = HashMap<i32, Vec<(i32, i32, i32)>>;
+
 fn main() {
     let input = fs::read_to_string("./input").expect("pipezzz boii");
 
@@ -9,40 +13,38 @@ fn main() {
 
     let keys = valve_keys(&raw_graph);
 
-    let graph = keys
+    let graph: SimplifiedGraph = keys
         .iter()
         .map(|(valve_name, int_key)| {
-            let (rate, ns) = paths_to_all_other(&raw_graph, valve_name);
-            let keyed = ns
-                .iter()
-                .map(|(name, dist, rate)| (*keys.get(name).unwrap(), *dist, *rate))
+            let paths = paths_to_all_other(&raw_graph, valve_name);
+            let keyed = paths
+                .into_iter()
+                .map(|(name, dist, rate)| (*keys.get(name).unwrap(), dist, rate))
                 .collect::<Vec<_>>();
 
-            (*int_key, (rate, keyed))
+            (*int_key, keyed)
         })
         .collect::<HashMap<_, _>>();
 
     let mut paths1 = HashMap::new();
     run_all_paths(&graph, 1, 30, 0, 0, &mut paths1);
-    println!("part1: {:?}", paths1.values().max());
+    println!("part1: {:?}", paths1.into_values().max());
 
-    let mut all_path_scores = HashMap::new();
-    run_all_paths(&graph, 1, 26, 0, 0, &mut all_path_scores);
+    let mut paths2 = HashMap::new();
+    run_all_paths(&graph, 1, 26, 0, 0, &mut paths2);
 
-    let slona = all_path_scores
-        .iter()
-        .flat_map(|r1| all_path_scores.iter().map(move |r2| (r1, r2)))
-        .filter(|(r1, r2)| r1.0 & r2.0 == 1)
-        .map(|(r1, r2)| r1.1 + r2.1)
-        .max()
-        .unwrap();
+    let paths_vec = paths2.into_iter().collect::<Vec<_>>();
+    let mut max = 0;
+    for i in 0..paths_vec.len() - 1 {
+        for j in (i + 1)..paths_vec.len() - 1 {
+            if paths_vec[i].0 & paths_vec[j].0 == 1 {
+                max = cmp::max(paths_vec[i].1 + paths_vec[j].1, max);
+            }
+        }
+    }
 
-    println!("part2: {}", slona);
+    println!("{}", max)
 }
-
-type SimplifiedGraph = HashMap<i32, (i32, Vec<(i32, i32, i32)>)>;
-
-type RawGraph<'a> = HashMap<&'a str, (i32, Vec<&'a str>)>;
 
 fn valve_keys<'a>(graph: &RawGraph<'a>) -> HashMap<&'a str, i32> {
     let mut valve_names = graph
@@ -106,17 +108,17 @@ fn run_all_paths<'a>(
     left: i32,
     turned: i32,
     score: i32,
-    ps: &mut HashMap<i32, i32>,
+    all_paths: &mut HashMap<i32, i32>,
 ) {
-    let (_, paths) = graph.get(&current).unwrap();
+    let paths = graph.get(&current).unwrap();
     let new_turned = insert(turned, current);
 
-    ps.entry(new_turned)
+    all_paths.entry(new_turned)
         .and_modify(|x| *x = cmp::max(*x, score))
         .or_insert(score);
 
-    for (node, cost, rate) in paths.iter() {
-        if has(new_turned, *node) {
+    for &(node, cost, rate) in paths.iter() {
+        if has(new_turned, node) {
             continue;
         }
 
@@ -126,15 +128,14 @@ fn run_all_paths<'a>(
         }
 
         let released = rate * new_left;
-        run_all_paths(graph, *node, new_left, new_turned, score + released, ps)
+        run_all_paths(graph, node, new_left, new_turned, score + released, all_paths)
     }
 }
 
-fn paths_to_all_other<'a>(graph: &RawGraph<'a>, from: &'a str) -> (i32, Vec<(&'a str, i32, i32)>) {
+fn paths_to_all_other<'a>(graph: &RawGraph<'a>, from: &'a str) -> Vec<(&'a str, i32, i32)> {
     let mut visited = HashSet::from([from]);
     let mut nodes = VecDeque::from([(from, 0)]);
     let mut paths = Vec::new();
-    let (from_rate, _) = graph.get(from).unwrap();
 
     while let Some((current, distance)) = nodes.pop_front() {
         let (rate, neighbs) = graph.get(current).unwrap();
@@ -150,5 +151,5 @@ fn paths_to_all_other<'a>(graph: &RawGraph<'a>, from: &'a str) -> (i32, Vec<(&'a
         }
     }
 
-    (*from_rate, paths)
+    paths
 }
