@@ -69,10 +69,29 @@ fn main() {
         })
         .collect::<HashMap<_, _>>();
 
+    let mut routes = Vec::new();
     println!(
         "kekw {}",
-        max_release_nice(&graph, 1, 30, 0)
+        max_release_nice(&graph, 1, 26, 0, 0, &mut routes)
     );
+
+    routes.sort();
+    let slona = routes
+        .iter()
+        .flat_map(|r1| routes.iter().map(move |r2| (*r1, *r2)))
+        .filter(|(r1, r2)| {
+            r1.0 != 1 && r2.0 != 1 && (rem(r1.0, 1) & rem(r2.0, 1) == 0)
+        })
+        .map(|(r1, r2)| r1.1 + r2.1)
+        .max();
+
+    //println!("{:?}", &graph);
+    //println!("{:?}", &rs);
+    println!("{:?}", slona);
+}
+
+fn rem(t: i32, c: i32) -> i32 {
+    t & !c
 }
 
 fn insert(t: i32, c: i32) -> i32 {
@@ -94,10 +113,14 @@ fn max_release_nice<'a>(
     current: i32,
     left: i32,
     turned: i32,
+    score: i32,
+    ps: &mut Vec<(i32, i32)>
 ) -> i32 {
     let (_, next) = net.get(&current).unwrap();
 
     let t = insert(turned, current);
+
+    ps.push((t, score));
     let press = next
         .iter()
         .filter_map(|(name, cost, rate)| {
@@ -111,7 +134,7 @@ fn max_release_nice<'a>(
 
             let p = rate * l;
 
-            Some(p + max_release_nice(net, *name, l, t))
+            Some(p + max_release_nice(net, *name, l, t, score + p, ps))
         })
         .max()
         .unwrap_or(0);
