@@ -41,6 +41,8 @@ fn main() {
     println!("part2: {}", slona);
 }
 
+type SimplifiedGraph = HashMap<i32, (i32, Vec<(i32, i32, i32)>)>;
+
 type RawGraph<'a> = HashMap<&'a str, (i32, Vec<&'a str>)>;
 
 fn valve_keys<'a>(graph: &RawGraph<'a>) -> HashMap<&'a str, i32> {
@@ -105,14 +107,14 @@ fn has(t: i32, c: i32) -> bool {
 
 // (1600..1626)
 fn run_all_paths<'a>(
-    net: &HashMap<i32, (i32, Vec<(i32, i32, i32)>)>,
+    graph: &SimplifiedGraph,
     current: i32,
     left: i32,
     turned: i32,
     score: i32,
     ps: &mut HashMap<i32, i32>,
 ) -> i32 {
-    let (_, next) = net.get(&current).unwrap();
+    let (_, next) = graph.get(&current).unwrap();
 
     let new_turned = insert(turned, current);
 
@@ -134,7 +136,7 @@ fn run_all_paths<'a>(
 
             let released = rate * new_left;
 
-            Some(released + run_all_paths(net, *node, new_left, new_turned, score + released, ps))
+            Some(released + run_all_paths(graph, *node, new_left, new_turned, score + released, ps))
         })
         .max()
         .unwrap_or(0);
