@@ -20,23 +20,7 @@ fn main() {
         k
     };
 
-    let ps = input
-        .lines()
-        .map(|line| {
-            let mut l = line.split(';');
-            let f = l.next().unwrap();
-            let s = l.next().unwrap();
-
-            let (name, rate) = match f.split(' ').collect::<Vec<_>>()[..] {
-                [_, name, _, _, end] => (name, end.strip_prefix("rate=").unwrap()),
-                _ => unreachable!(),
-            };
-
-            let tunnels = s.split(' ').skip(5).map(|t| &t[0..2]).collect::<Vec<_>>();
-
-            (name, (rate.parse::<i32>().unwrap(), tunnels))
-        })
-        .collect::<HashMap<_, _>>();
+    let ps = parse(&input);
 
     let mut ks = ps
         .iter()
@@ -69,25 +53,45 @@ fn main() {
         })
         .collect::<HashMap<_, _>>();
 
-    let mut routes = Vec::new();
     println!(
-        "kekw {}",
-        max_release_nice(&graph, 1, 26, 0, 0, &mut routes)
+        "part1: {}",
+        run_all_paths(&graph, 1, 30, 0, 0, &mut HashMap::new())
     );
 
-    routes.sort();
-    let slona = routes
-        .iter()
-        .flat_map(|r1| routes.iter().map(move |r2| (*r1, *r2)))
-        .filter(|(r1, r2)| {
-            r1.0 != 1 && r2.0 != 1 && (rem(r1.0, 1) & rem(r2.0, 1) == 0)
-        })
-        .map(|(r1, r2)| r1.1 + r2.1)
-        .max();
+    let mut all_path_scores = HashMap::new();
+    run_all_paths(&graph, 1, 26, 0, 0, &mut all_path_scores);
 
-    //println!("{:?}", &graph);
-    //println!("{:?}", &rs);
-    println!("{:?}", slona);
+    let slona = all_path_scores
+        .iter()
+        .flat_map(|r1| all_path_scores.iter().map(move |r2| (r1, r2)))
+        .filter(|(r1, r2)| r1.0 & r2.0 == 1)
+        .map(|(r1, r2)| r1.1 + r2.1)
+        .max()
+        .unwrap();
+
+    println!("part2: {}", slona);
+}
+
+fn parse<'a>(input: &'a str) -> HashMap<&'a str, (i32, Vec<&'a str>)> {
+    let paths = input
+        .lines()
+        .map(|line| {
+            let mut l = line.split(';');
+            let f = l.next().unwrap();
+            let s = l.next().unwrap();
+
+            let (name, rate) = match f.split(' ').collect::<Vec<_>>()[..] {
+                [_, name, _, _, end] => (name, end.strip_prefix("rate=").unwrap()),
+                _ => unreachable!(),
+            };
+
+            let tunnels = s.split(' ').skip(5).map(|t| &t[0..2]).collect::<Vec<_>>();
+
+            (name, (rate.parse::<i32>().unwrap(), tunnels))
+        })
+        .collect::<HashMap<_, _>>();
+
+    paths
 }
 
 fn rem(t: i32, c: i32) -> i32 {
@@ -95,51 +99,55 @@ fn rem(t: i32, c: i32) -> i32 {
 }
 
 fn insert(t: i32, c: i32) -> i32 {
-    assert!(t < 1 << 16);
-    assert!(c < (1 << 16));
-    assert!(t & c == 0);
+    //assert!(t < 1 << 16);
+    //assert!(c < (1 << 16));
+    //assert!(t & c == 0);
     t | c
 }
 
 fn has(t: i32, c: i32) -> bool {
-    assert!(t < 1 << 16);
-    assert!(c < (1 << 16));
+    //assert!(t < 1 << 16);
+    //assert!(c < (1 << 16));
     t & c != 0
 }
 
 // (1600..1626)
-fn max_release_nice<'a>(
+fn run_all_paths<'a>(
     net: &HashMap<i32, (i32, Vec<(i32, i32, i32)>)>,
     current: i32,
     left: i32,
     turned: i32,
     score: i32,
-    ps: &mut Vec<(i32, i32)>
+    ps: &mut HashMap<i32, i32>,
 ) -> i32 {
     let (_, next) = net.get(&current).unwrap();
 
-    let t = insert(turned, current);
+    let new_turned = insert(turned, current);
 
-    ps.push((t, score));
-    let press = next
+    ps.entry(new_turned)
+        .and_modify(|x| *x = cmp::max(*x, score))
+        .or_insert(score);
+
+    let result = next
         .iter()
-        .filter_map(|(name, cost, rate)| {
-            if has(t, *name) {
-                return None;
-            }
-            let l = left - cost - 1;
-            if l < 0 {
+        .filter_map(|(node, cost, rate)| {
+            if has(new_turned, *node) {
                 return None;
             }
 
-            let p = rate * l;
+            let new_left = left - cost - 1;
+            if new_left < 0 {
+                return None;
+            }
 
-            Some(p + max_release_nice(net, *name, l, t, score + p, ps))
+            let released = rate * new_left;
+
+            Some(released + run_all_paths(net, *node, new_left, new_turned, score + released, ps))
         })
         .max()
         .unwrap_or(0);
 
-    press
+    result
 }
 
 fn neighbs<'a>(
