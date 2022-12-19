@@ -72,7 +72,9 @@ fn main() {
     println!("part2: {}", slona);
 }
 
-fn parse<'a>(input: &'a str) -> HashMap<&'a str, (i32, Vec<&'a str>)> {
+type RawGraph<'a> = HashMap<&'a str, (i32, Vec<&'a str>)>;
+
+fn parse<'a>(input: &'a str) -> RawGraph {
     let paths = input
         .lines()
         .map(|line| {
@@ -151,7 +153,7 @@ fn run_all_paths<'a>(
 }
 
 fn neighbs<'a>(
-    net: &HashMap<&'a str, (i32, Vec<&'a str>)>,
+    net: &RawGraph<'a>,
     current: &'a str,
 ) -> (i32, Vec<(&'a str, i32, i32)>) {
     let mut visited = HashSet::new();
