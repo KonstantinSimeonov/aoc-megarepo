@@ -1,11 +1,12 @@
+//use std::collections::HashMap;
 use std::fs;
 use std::iter;
 
 static WALLS: i32 = (1 << 8) + 1;
 static FLOOR: i32 = (1 << 9) - 1;
 
-fn repeat_vec<T: Copy>(xs: &Vec<T>) -> impl Iterator<Item = (usize, T)> + '_ {
-    let mut i = 0;
+fn repeat_vec<T: Copy>(xs: &Vec<T>, start: usize) -> impl Iterator<Item = (usize, T)> + '_ {
+    let mut i = start;
     let it = iter::repeat_with(move || {
         let x = xs[i];
         //println!("{}: {} {}", name, i, xs.len());
@@ -16,18 +17,39 @@ fn repeat_vec<T: Copy>(xs: &Vec<T>) -> impl Iterator<Item = (usize, T)> + '_ {
     it
 }
 
-// (0..1514285714288)
-// 1504093567270
-fn main() {
-    let input = fs::read_to_string("./input")
-        .expect("lol")
-        .trim()
-        .chars()
-        .map(|dir| dir == '<')
-        .collect::<Vec<_>>();
+fn calc_streaks<T: Eq>(xs: &Vec<T>, start: usize, end: usize) -> Option<(usize, usize, usize)> {
+    let x = &xs;
+    for i in start..end {
+        let mut j = i + 1;
 
-    let mut dirs = repeat_vec(&input);
+        while j < end {
+            if x[i] == x[j] {
+                let mut j1 = j;
 
+                let mut i1 = i;
+                assert!(i1 != j1);
+                assert!(j1 >= end || x[i1] == x[j1]);
+
+                while j1 < end && x[i1] == x[j1] {
+                    i1 += 1;
+                    j1 += 1;
+                }
+
+                let s = j1 - i1;
+                if j1 == end && i1 > j {
+                    return Some((i, j, (j1 - i) / s));
+                }
+            }
+
+            j += 1;
+        }
+    }
+
+    None
+}
+
+fn fall_rocks(gasses: &Vec<bool>, rocks_count: usize) -> (Vec<i32>, Vec<(usize, usize, usize)>) {
+    let mut dirs = repeat_vec(&gasses, 0);
     let mut stack = vec![FLOOR];
     let ps = Vec::from([
         [60, 0, 0, 0],
@@ -37,18 +59,12 @@ fn main() {
         [48, 48, 0, 0],
     ]);
 
-    let mut rocks = repeat_vec(&ps);
+    let mut rocks = repeat_vec(&ps, 0);
 
-    let mut s = 0;
+    let mut hs = vec![];
 
-    let mut res = vec![];
-
-    let upper: usize = 1000000;
-    let mut li = 0;
-    for i in 0..upper {
-        if i % 100000 == 0 {
-            println!("{} left", upper - i);
-        }
+    // 24_596 -> 26,79,702
+    for _ in 0..rocks_count {
         let (wi, _) = stack
             .iter()
             .enumerate()
@@ -57,74 +73,79 @@ fn main() {
             .unwrap();
         let diff = stack.len() - wi;
         stack.extend((0..5 - diff).map(|_| WALLS));
-        //println!("pad");
-        //render(&stack);
+        let (ri, cr) = rocks.next().unwrap();
+        let di = fall(&cr, &mut dirs, &mut stack);
 
-        //println!("fall {}", i);
-        let (_, cr) = rocks.next().unwrap();
-        if let Some((cut_ind, di)) = fall(&cr, &mut dirs, &mut stack) {
-            s += cut_ind;
-            res.push((stack.splice(0..cut_ind, []).collect::<Vec<_>>(), i - li, di));
-            li = i;
+        while *stack.last().unwrap() == WALLS {
+            stack.pop();
         }
-        //render(&stack);
+        hs.push((stack.len() - 1, di, ri));
     }
 
-    let pos = stack.iter().rev().position(|&x| x != WALLS).unwrap();
-
-    println!("part 1: {:?}", s + stack.len() - pos - 1);
-    //println!("{:?}", res);
-
-    let (bsum, brocks) = res.iter().take(5).fold((0, 0), |(s1, s2), (x, y, _)| (s1 + x.len(), s2 + y));
-    println!("start {:?}", (bsum, brocks));
-
-    let mut scs = vec![];
-    for i in 5..28 {
-        for j in (i + 1)..res.len() {
-            if res[i].0 == res[j].0 {
-                //println!("match {:?}", (i, j, res[i].0.len(), res[i].1, res[j].1, res[i].2, res[j].2));
-                scs.push((res[i].0.len(), res[i].1, res[i].2));
-                break;
-            }
-        }
-    }
-
-    println!("{:?}", scs);
-
-    let (sheight, srocks): (usize, usize) = scs.iter().fold((0, 0), |(sum_height, sum_rocks), (h, r, _)| (sum_height + h, sum_rocks + r));
-    let u: usize = 1000000000000;
-    println!("{:?}", (sheight, srocks));
-
-    let fits = (u - brocks) / srocks;
-    let rem = (u - brocks) % srocks;
-    println!("rem {:?}", rem);
-
-    let ans = fits * sheight;
-    println!("psums {:?}", scs.iter().map(|x| x.1).scan(0, |s, x| { *s += x; Some(*s) }).collect::<Vec<_>>());
-    let rem_sum = 1282;
-
-    let x = bsum + ans + rem_sum;
-    assert!(x < 1514285714288);
-    println!("{:?}\n1514285714288\n{:?}", x, (bsum, ans, rem_sum));
-
-    //let fsum: usize = res.iter().take(5).map(|x| x.0.len()).sum();
-    //let msum = fits * s;
-    //let lsum: usize = scs.iter().take(rem).sum();
-
-    //println!("{:?} {} {}", &scs, scs.len(), s);
-    //println!("{} {} {}\n55913043478085\n1514285714288", fsum, msum, lsum);
-
-    //let res2 = res.iter().skip(5).map(|x| x.0.len()).collect::<Vec<_>>();
-    //println!("{:?}", res2.chunks(23).map(|c| c.iter().sum()).collect::<Vec<usize>>())
-    //let stuff = stack.iter().enumerate().filter(|&(i, x)| *x == FLOOR).collect::<Vec<_>>();
-    //println!("{:?}", stuff)
+    (stack, hs)
 }
 
-fn fall(rock: &[i32; 4], dirs: &mut impl Iterator<Item = (usize, bool)>, stack: &mut Vec<i32>) -> Option<(usize, usize)> {
+// (0..1514285714288)
+// 1504093567270
+// 1504093567271
+// 1504093567242
+// 1504093567239
+fn main() {
+    let input = fs::read_to_string("./input0")
+        .expect("lol")
+        .trim()
+        .chars()
+        .map(|dir| dir == '<')
+        .collect::<Vec<_>>();
+
+    let (stack, hs) = fall_rocks(&input, 20_000);
+
+    println!("part 1: {}", stack.len() - 1);
+
+    let deltas = hs.iter().zip(hs.iter().skip(1)).map(|(prev, curr)| (curr.0 - prev.0, curr.1, curr.2)).collect::<Vec<_>>();
+
+    //println!("part 1: {:?}", deltas);//stack.len() - pos - 1);
+    let str = calc_streaks(&deltas, 0, deltas.len()).expect("to have repeating pattern");
+    println!("repeating pattern {:?}", str);
+    let (s, e, _) = str;
+    let pat = &deltas[s..e];
+    let pat_sum: usize = pat.iter().map(|t3| t3.0).sum();
+    let pat_len = e - s;
+    println!("{} {}", pat_sum, pat_len);
+
+    let init_sum: usize = deltas.iter().take(s).map(|t3| t3.0).sum::<usize>() - 1;
+    println!("gosho {} pesho", init_sum);
+
+    let big: usize = 1000000000000;
+
+    let without_start = (big - s) / pat_len;
+    let rem = (big - s) % pat_len;
+
+    println!("{:?}", (init_sum, without_start, rem));
+
+    let rep_sum = without_start * pat_sum;
+
+    let ans = rep_sum + init_sum;
+
+    println!("{}", 1514285714288 - ans)
+    //println!("{} {}", stack[stack.len() - 1] == WALLS, stack[stack.len() - 2] == WALLS);
+
+    //let strs = calc_streaks(&stack, 0, stack.len());
+    //println!("{:?}", strs);
+    //println!("{:?}", stack.iter().rev().take((79 - 26) + 1).rev().collect::<Vec<_>>().as_slice());
+    //println!("{:?}", &stack[26..79]);
+    //println!("window.data = {:?};", stack.as_slice());
+}
+
+fn fall(
+    rock: &[i32; 4],
+    dirs: &mut impl Iterator<Item = (usize, bool)>,
+    stack: &mut Vec<i32>,
+) -> usize {
     //let mut dbg = Vec::new();
     let mut i = stack.len() - 1;
     let mut r = *rock;
-    let mut di: usize = 0;
+    let mut di = 0;
     loop {
         let (xi, d) = dirs.next().unwrap();
         //dbg.push(d);
@@ -146,16 +167,12 @@ fn fall(rock: &[i32; 4], dirs: &mut impl Iterator<Item = (usize, bool)>, stack: 
 
     //println!("collision {}", i);
     //println!("{}", dbg.into_iter().map(|x| if x { '<' } else { '>' }).collect::<String>());
-    let mut cut = None;
     for j in 0..r.len() {
         let ind = i + j + 1;
         stack[ind] |= r[j];
-        if stack[ind] == FLOOR {
-            cut = Some((ind, di));
-        }
     }
 
-    cut
+    di
 }
 
 fn render(stack: &Vec<i32>) {
