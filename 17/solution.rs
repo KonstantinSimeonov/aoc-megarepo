@@ -16,7 +16,8 @@ fn main() {
     println!("part 1: {}", heights[2021]);
 
     let part2 = fall_rocks_big(&heights, 1000000000000);
-    println!("part 2: {}", part2)
+    println!("part 2: {}", part2);
+    //println!("window.data = {:?}", heights);
 }
 
 fn repeat_vec<T>(xs: &Vec<T>) -> impl Iterator<Item = &T> + '_ {
