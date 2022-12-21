@@ -91,14 +91,14 @@ fn fall_rocks(gasses: &Vec<bool>, rocks_count: usize) -> (Vec<i32>, Vec<(usize, 
 // 1504093567242
 // 1504093567239
 fn main() {
-    let input = fs::read_to_string("./input0")
+    let input = fs::read_to_string("./input")
         .expect("lol")
         .trim()
         .chars()
         .map(|dir| dir == '<')
         .collect::<Vec<_>>();
 
-    let (stack, hs) = fall_rocks(&input, 20_000);
+    let (stack, hs) = fall_rocks(&input, 24_000);
 
     println!("part 1: {}", stack.len() - 1);
 
@@ -113,7 +113,7 @@ fn main() {
     let pat_len = e - s;
     println!("{} {}", pat_sum, pat_len);
 
-    let init_sum: usize = deltas.iter().take(s).map(|t3| t3.0).sum::<usize>() - 1;
+    let init_sum: usize = deltas.iter().take(s).map(|t3| t3.0).sum::<usize>();
     println!("gosho {} pesho", init_sum);
 
     let big: usize = 1000000000000;
@@ -124,10 +124,10 @@ fn main() {
     println!("{:?}", (init_sum, without_start, rem));
 
     let rep_sum = without_start * pat_sum;
+    let rem_sum: usize = pat.iter().take(rem).map(|t3| t3.0).sum();
+    let ans = rep_sum + init_sum + rem_sum;
 
-    let ans = rep_sum + init_sum;
-
-    println!("{}", 1514285714288 - ans)
+    println!("{} {}", 1514285714288 - ans, ans)
     //println!("{} {}", stack[stack.len() - 1] == WALLS, stack[stack.len() - 2] == WALLS);
 
     //let strs = calc_streaks(&stack, 0, stack.len());
