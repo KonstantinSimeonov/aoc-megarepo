@@ -1,9 +1,10 @@
 use std::fs;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::thread;
 
 // ore -> clay -> obsidian -> geodes
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct BP {
     id: i32,
     ore_cost: i32,
@@ -45,33 +46,7 @@ impl Bank {
 }
 
 fn builds(bank: &Bank, bp: &BP, inc: &Income) -> Vec<(Income, Bank)> {
-    let mut res = Vec::from([(inc.clone(), bank.clone())]);
-
-    if bank.ore >= bp.ore_cost && inc.ore < bp.max_ore {
-        let mut b = bank.clone();
-        b.ore -= bp.ore_cost;
-        let mut i = inc.clone();
-        i.ore += 1;
-        //println!("ore robot");
-        res.push((i, b));
-    }
-
-    if bank.ore >= bp.clay_cost && inc.clay < bp.max_clay {
-        let mut b = bank.clone();
-        b.ore -= bp.clay_cost;
-        let mut i = inc.clone();
-        i.clay += 1;
-        res.push((i, b));
-    }
-
-    if bank.ore >= bp.obs_cost.0 && bank.clay >= bp.obs_cost.1 && inc.obs < bp.max_obs {
-        let mut b = bank.clone();
-        b.ore -= bp.obs_cost.0;
-        b.clay -= bp.obs_cost.1;
-        let mut i = inc.clone();
-        i.obs += 1;
-        res.push((i, b));
-    }
+    let mut res = Vec::new();
 
     if bank.ore >= bp.geode_cost.0 && bank.obs >= bp.geode_cost.1 {
         let mut b = bank.clone();
@@ -80,6 +55,35 @@ fn builds(bank: &Bank, bp: &BP, inc: &Income) -> Vec<(Income, Bank)> {
         let mut i = inc.clone();
         i.geode += 1;
         res.push((i, b));
+    } else {
+        if bank.ore >= bp.ore_cost && inc.ore < bp.max_ore {
+            let mut b = bank.clone();
+            b.ore -= bp.ore_cost;
+            let mut i = inc.clone();
+            i.ore += 1;
+            res.push((i, b));
+        }
+
+        if bank.ore >= bp.clay_cost && inc.clay < bp.max_clay {
+            let mut b = bank.clone();
+            b.ore -= bp.clay_cost;
+            let mut i = inc.clone();
+            i.clay += 1;
+            res.push((i, b));
+        }
+
+        if bank.ore >= bp.obs_cost.0 && bank.clay >= bp.obs_cost.1 && inc.obs < bp.max_obs {
+            let mut b = bank.clone();
+            b.ore -= bp.obs_cost.0;
+            b.clay -= bp.obs_cost.1;
+            let mut i = inc.clone();
+            i.obs += 1;
+            res.push((i, b));
+        }
+
+        if res.len() <= 2 {
+            res.push((inc.clone(), bank.clone()))
+        }
     }
 
     res
@@ -117,21 +121,41 @@ fn main() {
     let bank = Bank { ore: 0, clay: 0, obs: 0, geode: 0 };
     let inc = Income { ore: 1, clay: 0, obs: 0, geode: 0 };
 
-    // println!("{:?}", sim(inc, &bps[1], bank, 24, &mut HashMap::new()));
+    //println!("{:?}", sim(inc, &bps[1], bank, 32, &mut HashMap::new()));
+
+    if true {
+        let ts = bps
+            .into_iter()
+            .take(3)
+            .map(|bp| {
+                let i = inc.clone();
+                let pr = bp.clone();
+                let b = bank.clone();
+
+                thread::spawn(move || sim(i, &pr, b, 32, &mut HashSet::new()))
+            })
+            .collect::<Vec<_>>();
+
+        let p2: i32 = ts.into_iter().map(|t| t.join().unwrap()).product();
+
+        println!("p2: {:?}", p2);
+
+        return;
+    }
 
     //println!("{:?}", sim(&inc, &bps[1], &bank, 24, &mut HashMap::new()));
 
     let part1: i32 = bps
         .iter()
-        .map(|bp| bp.id * sim(inc.clone(), bp, bank.clone(), 24, &mut HashMap::new()))
+        .map(|bp| bp.id * sim(inc.clone(), bp, bank.clone(), 24, &mut HashSet::new()))
         .sum();
 
     println!("{:?}", part1)
 }
 
-fn sim(inc: Income, bp: &BP, bank: Bank, left: i32, cache: &mut HashMap<(i32, i32, i32), i32>) -> i32 {
-    if let Some(ans) = cache.get(&(bank.h(), inc.h(), left)) {
-        return *ans
+fn sim(inc: Income, bp: &BP, bank: Bank, left: i32, cache: &mut HashSet<(i32, i32, i32)>) -> i32 {
+    if cache.contains(&(bank.h(), inc.h(), left)) {
+        return 0
     }
 
     if left <= 0 {
@@ -156,7 +180,7 @@ fn sim(inc: Income, bp: &BP, bank: Bank, left: i32, cache: &mut HashMap<(i32, i3
         .max()
         .unwrap();
 
-    cache.insert((bank.h(), inc.h(), left), ans);
+    cache.insert((bank.h(), inc.h(), left));
 
     ans
 }
