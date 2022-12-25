@@ -1,59 +1,80 @@
 use std::fs;
 
-#[derive(Debug)]
-struct Num {
-    i: usize,
-    d: i64,
-}
-
-static KEY: i64 = 811589153;
+// (mixed position, delta)
+type Num = (usize, i64);
 
 fn main() {
     let input = fs::read_to_string("./input").expect("noombers m8");
 
-    let mut ys = input
+    let nums = input
         .trim()
         .lines()
-        .enumerate()
-        .map(|(i, l)| Num {
-            i,
-            d: l.parse::<i64>().unwrap() * KEY,
-        })
+        .map(|line| line.parse::<i64>().unwrap())
         .collect::<Vec<_>>();
 
-    let l1 = ys.len() as i64 - 1;
-    let lsize = ys.len();
+    let part1 = answer(&mix(&nums, 1, 1));
 
-    let order = ys.iter_mut().map(|r| r as *mut Num).collect::<Vec<_>>();
-    let mut xs = order.clone();
+    println!("part 1: {}", part1);
+
+    let part2 = answer(&mix(&nums, 811589153, 10));
+
+    println!("part 2: {}", part2)
+}
+
+fn answer(mixed: &Vec<*mut Num>) -> i64 {
+    let p = mixed
+        .iter()
+        .enumerate()
+        .find_map(|(i, &num)| unsafe {
+            if (*num).1 == 0 {
+                Some(i)
+            } else {
+                None
+            }
+        })
+        .unwrap();
+
+    let ixs = [p + 1000, p + 2000, p + 3000].map(|ix| unsafe { (*mixed[ix % mixed.len()]).1 });
+
+    ixs.iter().sum()
+}
+
+fn mix(numbers: &Vec<i64>, key: i64, times: usize) -> Vec<*mut Num> {
+    let mut indexed_pairs = numbers
+        .iter()
+        .enumerate()
+        .map(|(i, &n)| (i, n * key))
+        .collect::<Vec<_>>();
+
+    let l1 = indexed_pairs.len() as i64 - 1;
+    let len = indexed_pairs.len();
+
+    let order = indexed_pairs
+        .iter_mut()
+        .map(|r| r as *mut Num)
+        .collect::<Vec<_>>();
+
+    let mut mixed = order.clone();
 
     unsafe {
-        for _ in 0..10 {
-            for &n in order.iter() {
-                let Num { i, d } = *n;
+        for _ in 0..times {
+            for &num in order.iter() {
+                let (i, delta) = *num;
 
-                let insert_at = ((l1 + ((i as i64 + d) % l1)) % l1) as usize;
-                (*n).i = insert_at;
+                let insert_at = ((l1 + ((i as i64 + delta) % l1)) % l1) as usize;
+                (*num).0 = insert_at;
 
-                xs.remove(i);
-                for a in i..lsize - 1 {
-                    (*xs[a]).i -= 1;
+                mixed.remove(i);
+                for a in i..len - 1 {
+                    (*mixed[a]).0 -= 1;
                 }
-                xs.insert(insert_at, n);
-                for a in (insert_at + 1)..lsize {
-                    (*xs[a]).i += 1;
+                mixed.insert(insert_at, num);
+                for a in (insert_at + 1)..len {
+                    (*mixed[a]).0 += 1;
                 }
             }
         }
-
-        let p = xs
-            .iter()
-            .enumerate()
-            .find_map(|(i, &x)| if (*x).d == 0 { Some(i) } else { None })
-            .unwrap();
-
-        let ixs = [p + 1000, p + 2000, p + 3000].map(|ix| (*xs[ix % lsize]).d);
-
-        println!("{:?}", ixs.iter().sum::<i64>());
     }
+
+    mixed
 }
