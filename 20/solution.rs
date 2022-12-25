@@ -1,34 +1,59 @@
-use std::{fs, collections::HashSet};
+use std::fs;
+
+#[derive(Debug)]
+struct Num {
+    i: usize,
+    d: i64,
+}
+
+static KEY: i64 = 811589153;
 
 fn main() {
     let input = fs::read_to_string("./input").expect("noombers m8");
 
-    let mut xs = input
+    let mut ys = input
         .trim()
         .lines()
-        .map(|l| (l.parse::<i32>().unwrap(), true))
+        .enumerate()
+        .map(|(i, l)| Num {
+            i,
+            d: l.parse::<i64>().unwrap() * KEY,
+        })
         .collect::<Vec<_>>();
 
-    let mut i: i32 = 0;
-    let l = xs.len() as i32;
+    let l1 = ys.len() as i64 - 1;
+    let lsize = ys.len();
 
-    while i < l {
-        let (delta, can_move) = xs[i as usize];
-        if !can_move {
-            i += 1;
-            continue;
+    let order = ys.iter_mut().map(|r| r as *mut Num).collect::<Vec<_>>();
+    let mut xs = order.clone();
+
+    unsafe {
+        for _ in 0..10 {
+            for &n in order.iter() {
+                let Num { i, d } = *n;
+
+                let insert_at = ((l1 + ((i as i64 + d) % l1)) % l1) as usize;
+                (*n).i = insert_at;
+
+                xs.remove(i);
+                for a in i..lsize - 1 {
+                    (*xs[a]).i -= 1;
+                }
+                xs.insert(insert_at, n);
+                for a in (insert_at + 1)..lsize {
+                    (*xs[a]).i += 1;
+                }
+            }
         }
 
-        let d = i + delta;
-        let insert_at = if d <= 0 { l - 1 + (d % (l - 1)) } else { d % (l - 1) };
+        let p = xs
+            .iter()
+            .enumerate()
+            .find_map(|(i, &x)| if (*x).d == 0 { Some(i) } else { None })
+            .unwrap();
 
-        xs.remove(i as usize);
-        xs.insert(insert_at as usize, (delta, false));
+        let ixs = [p + 1000, p + 2000, p + 3000].map(|ix| (*xs[ix % lsize]).d);
+
+        println!("{:?}", ixs.iter().sum::<i64>());
     }
-
-    let p = xs.iter().enumerate().find_map(|x| if x.1.0 == 0 { Some(x.0) } else { None }).unwrap();
-
-    let ixs = [p + 1000, p + 2000, p + 3000].map(|ix| xs[(ix % (l as usize))].0);
-
-    println!("{:?}", ixs.iter().sum::<i32>())
 }
