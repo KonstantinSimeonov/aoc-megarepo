@@ -50,37 +50,40 @@ const SI: i32 = S as i32;
 
 fn transition(delta: &(i32, i32), (y, x): (i32, i32), q: usize) -> (i32, i32, i32) {
     let boog = |dir: &str| {
-        println!("bad {} transition -.- quad {}, y: {}, x: {}, delta: {:?}", dir, q, y, x, delta);
+        println!(
+            "bad {} transition -.- quad {}, y: {}, x: {}, delta: {:?}",
+            dir, q, y, x, delta
+        );
         unreachable!()
     };
 
     match delta {
         (0, 1) => match q {
             1 => (3 * SI - y - 1, 2 * SI - 1, L), // 4, left
-            2 => (SI - 1, SI + y, U), // 1, up
+            2 => (SI - 1, SI + y, U),             // 1, up
             4 => (3 * SI - 1 - y, 3 * SI - 1, L), // 1, left
-            5 => (3 * SI - 1, y - 2 * SI, U), // 4, up
-            _ => boog("right")
+            5 => (3 * SI - 1, y - 2 * SI, U),     // 4, up
+            _ => boog("right"),
         },
         (1, 0) => match q {
             1 => (x - SI, 2 * SI - 1, L), // 2, left
             4 => (2 * SI + x, SI - 1, L), // 5, left
-            5 => (0, 2 * SI + x, D), // boog? 1, down
-            _ => boog("down")
+            5 => (0, 2 * SI + x, D),      // boog? 1, down
+            _ => boog("down"),
         },
         (-1, 0) => match q {
-            0 => (x + 2 * SI, 0, R), // 5, right
+            0 => (x + 2 * SI, 0, R),          // 5, right
             1 => (4 * SI - 1, x - 2 * SI, U), // 5, up
-            3 => (SI + x, SI, R), // 2, right
-            _ => boog("up")
+            3 => (SI + x, SI, R),             // 2, right
+            _ => boog("up"),
         },
         (0, -1) => match q {
-            0 => (3 * SI - 1 - y, 0, R), // 3, right
-            2 => (2 * SI, y - SI, D), // 3, down
+            0 => (3 * SI - 1 - y, 0, R),  // 3, right
+            2 => (2 * SI, y - SI, D),     // 3, down
             3 => (3 * SI - 1 - y, SI, R), // 0, right
-            5 => (0, y - 2 * SI, D), // 0, down
-            _ => boog("left")
-        }
+            5 => (0, y - 2 * SI, D),      // 0, down
+            _ => boog("left"),
+        },
         _ => {
             println!("what even is this delta {:?}", delta);
             unreachable!()
@@ -95,14 +98,16 @@ fn calc_quad(y: i32, x: i32) -> usize {
         (S..2 * S, S..2 * S),
         (2 * S..3 * S, 0..S),
         (2 * S..3 * S, S..2 * S),
-        (3 * S..4 * S, 0..S)
-    ].iter().position(|(ry, rx)| ry.contains(&(y as usize)) && rx.contains(&(x as usize)));
+        (3 * S..4 * S, 0..S),
+    ]
+    .iter()
+    .position(|(ry, rx)| ry.contains(&(y as usize)) && rx.contains(&(x as usize)));
 
     match q {
         None => {
-            println!("quad0 fn fail {} {}", y, x);
+            println!("calc_quad fail {} {}", y, x);
             unreachable!()
-        },
+        }
         Some(x) => x,
     }
 }
@@ -112,13 +117,22 @@ fn main() {
 
     let input = fs::read_to_string("./input").expect("gadno maze");
     let (raw_board, raw_dirs) = input.trim_end().split_once("\n\n").unwrap();
-    let board = raw_board.lines().map(|line| line.as_bytes()).collect::<Vec<_>>();
+    let board = raw_board
+        .lines()
+        .map(|line| line.as_bytes())
+        .collect::<Vec<_>>();
 
     let dirs = parse_dirs(raw_dirs);
     let mut current = board[0]
         .iter()
         .enumerate()
-        .find_map(|(i, &tile)| if tile == b'.' { Some((0, i as i32)) } else { None })
+        .find_map(|(i, &tile)| {
+            if tile == b'.' {
+                Some((0, i as i32))
+            } else {
+                None
+            }
+        })
         .unwrap();
 
     let dl = DELTAS.len() as i32;
@@ -145,10 +159,12 @@ fn main() {
                 Some(b'.') => {
                     current = (ny, nx);
                     visit(&current, dir);
-                },
+                }
                 Some(b'#') => break,
                 Some(b' ') | None => {
-                    let (ty, tx, ndir) = transition(&delta, (ny, nx), calc_quad(ny - dy, nx - dx));
+                    let ly = ny - dy;
+                    let lx = nx - dx;
+                    let (ty, tx, ndir) = transition(&delta, (ly, lx), calc_quad(ly, lx));
                     if let Some(c) = index(ty, tx, &board) {
                         assert_ne!(c, b' ');
                         if c == b'.' {
@@ -157,8 +173,8 @@ fn main() {
                             visit(&current, dir);
                         }
                     }
-                },
-                _ => unreachable!()
+                }
+                _ => unreachable!(),
             }
 
             steps_left -= 1;
