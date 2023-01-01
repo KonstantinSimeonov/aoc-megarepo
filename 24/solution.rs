@@ -1,4 +1,7 @@
-use std::{fs, collections::{HashSet, VecDeque}};
+use std::{
+    collections::{HashSet, VecDeque},
+    fs,
+};
 
 type P = (i32, i32);
 
@@ -34,7 +37,7 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    println!("{} {}", size_y, size_x);
+    println!("rows: {}, cols: {}", size_y, size_x);
 
     let mut frees = vec![invert_rect(size_y, size_x, &blizzys)];
     let mut states = vec![blizzys];
@@ -58,21 +61,51 @@ fn main() {
     }
 
     let pat = find_repeating_pattern(&frees).unwrap();
-    println!("pat {:?}", pat);
+    println!("blizzard pattern detected {:?}", pat);
     let fs = &frees[pat.0 as usize..pat.1 as usize];
 
+    let (_, time_to_exit) = walk(&fs, (-1, 0), 1, (size_y - 1, size_x - 1), size_y, size_x)
+        .expect("to get out eventually");
+    println!("part1: {}", time_to_exit);
+
+    let (_, time_to_entrance) = walk(
+        &fs,
+        (size_y, size_x - 2),
+        time_to_exit + 1,
+        (0, 0),
+        size_y,
+        size_x,
+    )
+    .expect("to get back to start");
+    println!("part2: {:?}", time_to_entrance);
+
+    let (_, part2) = walk(
+        &fs,
+        (0, 0),
+        time_to_entrance + 1,
+        (size_y - 1, size_x - 1),
+        size_y,
+        size_x,
+    )
+    .expect("to get out a second time");
+
+    println!("part2: {}", part2)
+}
+
+fn walk(
+    frees: &[HashSet<P>],
+    start: P,
+    start_time: usize,
+    end: P,
+    size_y: i32,
+    size_x: i32,
+) -> Option<(P, usize)> {
     let mut visited = HashSet::new();
 
-    let mut nodes = VecDeque::from([((-1, 0), 1)]);
-    let mut r = 0;
+    let mut nodes = VecDeque::from([(start, start_time)]);
     while let Some(curr) = nodes.pop_front() {
-        r = r + 1;
-        if r % 2000 == 0 {
-            //println!("prg {} {}", r, nodes.len());
-        }
         let ((y, x), time) = curr;
-        let f = &fs[time % fs.len()];
-        // println!("current {:?} {:?}", curr, f);
+        let f = &frees[time % frees.len()];
 
         let next = [U, D, L, R, STAY]
             .iter()
@@ -81,20 +114,17 @@ fn main() {
             .map(|p| (p, time + 1));
 
         for n in next {
-            // println!("cue {:?} {:?}", curr, n);
-            if n.0 == (size_y - 1, size_x - 1) {
-                println!("finish {:?}", n);
-                return;
+            if n.0 == end {
+                return Some(n);
             }
-            if visited.insert((n.0, n.1 % fs.len())) {
+
+            if visited.insert((n.0, n.1 % frees.len())) {
                 nodes.push_back(n);
             }
         }
-
-        // println!();
     }
 
-    panic!("close but no cigar");
+    None
 }
 
 fn invert_rect(size_y: i32, size_x: i32, blizzys: &Vec<(P, P)>) -> HashSet<P> {
@@ -107,6 +137,7 @@ fn invert_rect(size_y: i32, size_x: i32, blizzys: &Vec<(P, P)>) -> HashSet<P> {
     }
 
     free.insert((-1, 0));
+    free.insert((size_y, size_x - 2));
 
     free
 }
