@@ -17,7 +17,7 @@ fn main() {
     let mut size_y = -2;
     let mut size_x = 0;
 
-    let blizzys = input
+    let mut blizzys = input
         .trim()
         .lines()
         .enumerate()
@@ -40,10 +40,8 @@ fn main() {
     println!("rows: {}, cols: {}", size_y, size_x);
 
     let mut frees = vec![invert_rect(size_y, size_x, &blizzys)];
-    let mut states = vec![blizzys];
-
-    for i in 1..2000 {
-        let s = states[i - 1]
+    for i in 1..1500 {
+        let s = blizzys
             .iter()
             .map(|((y, x), delta)| {
                 (
@@ -57,12 +55,12 @@ fn main() {
             .collect::<Vec<_>>();
 
         frees.push(invert_rect(size_y, size_x, &s));
-        states.push(s);
+        blizzys = s;
     }
 
     let pat = find_repeating_pattern(&frees).unwrap();
     println!("blizzard pattern detected {:?}", pat);
-    let fs = &frees[pat.0 as usize..pat.1 as usize];
+    let fs = &frees[pat.0..pat.1];
 
     let (_, time_to_exit) = walk(&fs, (-1, 0), 1, (size_y - 1, size_x - 1), size_y, size_x)
         .expect("to get out eventually");
