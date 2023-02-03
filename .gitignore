@@ -3,5 +3,6 @@
 !*.*
 !input*
 !*/
+!Dockerfile
 
 *.o
