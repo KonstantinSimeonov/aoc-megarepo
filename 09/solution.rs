@@ -45,7 +45,7 @@ fn main() {
     println!("{:?}", visited.len());
 }
 
-// debug
+#[allow(dead_code)]
 fn render(tails: &Vec<P2>) {
     let mut p = Vec::<Vec<String>>::new();
     let s: i32 = 50;

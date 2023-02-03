@@ -187,14 +187,10 @@ fn main() {
     println!("part2: {}", part2);
 }
 
+#[allow(dead_code)]
 fn render(board: &Vec<&[u8]>, visited: &HashMap<(i32, i32), String>) {
     for (y, row) in board.iter().enumerate() {
         for (x, &c) in row.iter().enumerate() {
-            //if c == b' ' {
-            //    printn!("{}", c);
-            //    continue;
-            //}
-            //let c1 = quad0(y as i32, x as i32).to_string();
             let v = if c == b' ' {
                 " ".to_string()
             } else if let Some(d) = visited.get(&(y as i32, x as i32)) {
@@ -210,6 +206,7 @@ fn render(board: &Vec<&[u8]>, visited: &HashMap<(i32, i32), String>) {
     }
 }
 
+#[allow(dead_code)]
 fn test_transitions() {
     println!("right 1");
     let coords1 = (0..S).map(|y| (y as i32, (3 * S - 1) as i32));

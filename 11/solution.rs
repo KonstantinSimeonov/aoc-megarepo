@@ -9,7 +9,7 @@ struct Monkey {
     score: usize,
 }
 
-fn simulate_rounds(ms: &mut Vec<Monkey>, rounds: usize, manage_worry: &Fn(usize) -> usize) -> usize {
+fn simulate_rounds(ms: &mut Vec<Monkey>, rounds: usize, manage_worry: &dyn Fn(usize) -> usize) -> usize {
     for _ in 0..rounds {
         for i in 0..ms.len() {
             ms[i].score += ms[i].items.len();
@@ -31,14 +31,14 @@ fn simulate_rounds(ms: &mut Vec<Monkey>, rounds: usize, manage_worry: &Fn(usize)
 }
 
 fn main() {
-    let mut monkeys0 = vec![
+    let mut _monkeys0 = vec![
         Monkey { items: LinkedList::from([79, 98]), op: |old| old * 19, test: 23, targets: vec![2, 3], score: 0 },
         Monkey { items: LinkedList::from([54, 65, 75, 74]), op: |old| (old + 6), test: 19, targets: vec![2, 0], score: 0 },
         Monkey { items: LinkedList::from([79, 60, 97]), op: |old| old * old, test: 13, targets: vec![1, 3], score: 0 },
         Monkey { items: LinkedList::from([74]), op: |old| (old + 3), test: 17, targets: vec![0, 1], score: 0 },
     ];
 
-    let mut monkeys1 = vec![
+    let monkeys1 = vec![
         Monkey { items: LinkedList::from([93, 98]), op: |old| old * 17, test: 19, targets: vec![5, 3], score: 0 },
         Monkey { items: LinkedList::from([95, 72, 98, 82, 86]), op: |old| old + 5, test: 13, targets: vec![7, 6], score: 0 },
         Monkey { items: LinkedList::from([85, 62, 82, 86, 70, 65, 83, 76]), op: |old| old + 8, test: 5, targets: vec![3, 0], score: 0 },

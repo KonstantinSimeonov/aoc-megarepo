@@ -1,8 +1,8 @@
 use std::fs;
 use std::collections::HashSet;
 use std::iter::FromIterator;
-use std::io::BufReader;
-use std::io::BufRead;
+//use std::io::BufReader;
+//use std::io::BufRead;
 
 fn prio(c: char) -> u32 {
     ((c as u32) - 64) % 32 + (26 * (1 - ((c as u32) / 97)))
@@ -74,17 +74,17 @@ fn part2(s: &str) -> u32 {
 //}
 
 fn main() {
-    let f = File::open("./input0").expect("stuff");
-    let mut r = BufReader::new(f);
+    //let f = File::open("./input0").expect("stuff");
+    //let mut r = BufReader::new(f);
 
-    for x in r.lines().chunks(3) {
-        println("{:?}", x);
-    }
-    //let input = fs::read_to_string("./input")
-    //    .expect("stuff");
+    //for x in r.lines().chunks(3) {
+    //    println("{:?}", x);
+    //}
+    let input = fs::read_to_string("./input")
+        .expect("stuff");
 
-    //println!("{:?}", part1(&input));
-    //println!("{:?}", part2(&input));
+    println!("{:?}", part1(&input));
+    println!("{:?}", part2(&input));
 
     //let v1: Vec<&[i32]> = [1, 2, 3, 4, 5, 6].chunks(3).collect();
     //println!("{:?}", v1)

@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, collections::HashMap};
 
 static DELTAS: &[(i32, i32); 4] = &[
     (0, 1),
@@ -8,6 +8,7 @@ static DELTAS: &[(i32, i32); 4] = &[
 ];
 
 fn parse_dirs(dirs: &str) -> Vec<(i32, i32)> {
+    
     let mut res = Vec::new();
     let mut dir = 0;
     let mut forward = 0;
@@ -46,6 +47,25 @@ fn index(y: i32, x: i32, board: &Vec<&[u8]>) -> Option<u8> {
     Some(board[sy][sx])
 }
 
+#[allow(dead_code)]
+fn render(board: &Vec<&[u8]>, visited: &HashMap<(i32, i32), String>) {
+    for (y, row) in board.iter().enumerate() {
+        for (x, &c) in row.iter().enumerate() {
+            let v = if c == b' ' {
+                " ".to_string()
+            } else if let Some(d) = visited.get(&(y as i32, x as i32)) {
+                d.clone()
+            } else {
+                (board[y][x] as char).to_string()
+            };
+
+            print!("{}", v);
+        }
+
+        println!();
+    }
+}
+
 fn main() {
     let input = fs::read_to_string("./input").expect("gadno maze");
 
@@ -60,15 +80,18 @@ fn main() {
         .find_map(|(i, &tile)| if tile == b'.' { Some((0, i as i32)) } else { None })
         .unwrap();
 
-    println!("start {:?}", current);
-
     let mut dir = 0;
+
+    let mut visited = HashMap::new();
 
     let dl = DELTAS.len() as i32;
 
+    visited.insert(current.clone(), [">", "v", "<", "^"][dir as usize].to_string());
+
     for &(forward, turn) in dirs.iter() {
         dir = (dl + dir + turn) % dl;
-        let (dy, dx) = DELTAS[dir as usize];
+        let delta = DELTAS[dir as usize];
+        let (dy, dx) = delta;
 
         let mut f = forward;
         while f > 0 {
@@ -78,7 +101,10 @@ fn main() {
             //println!("{:?}", current);
 
             match index(ny, nx, &board) {
-                Some(b'.') => current = (ny, nx),
+                Some(b'.') => {
+                    current = (ny, nx);
+                    visited.insert((current.0, current.1), [">", "v", "<", "^"][dir as usize].to_string());
+                },
                 Some(b'#') => break,
                 Some(b' ') | None => {
                     let rdy = dy * -1;
@@ -112,8 +138,10 @@ fn main() {
         }
     }
 
-    println!("current {:?}, dir: {}", current, dir);
 
+
+    render(&board, &visited);
     let part1 = (current.0 + 1) * 1000 + (current.1 + 1) * 4 + dir;
-    println!("part1: {}", part1)
+    println!("current {:?}, dir: {}", current, dir);
+    println!("part1: {}", part1);
 }

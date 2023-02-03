@@ -76,7 +76,7 @@ fn main() {
 
         if cs1 == cs {
             println!("finished on {}", r);
-            return
+            break
         }
 
         cs = cs1;
@@ -125,6 +125,7 @@ fn count_empty(coords: &Coords) -> i32 {
     empty
 }
 
+#[allow(dead_code)]
 fn render(coords: &Coords) {
     let (mut sy, ey, sx, ex) = rect(coords);
 

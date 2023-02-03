@@ -40,7 +40,7 @@ fn main() {
     println!("rows: {}, cols: {}", size_y, size_x);
 
     let mut frees = vec![invert_rect(size_y, size_x, &blizzys)];
-    for i in 1..1500 {
+    for _ in 1..1500 {
         let s = blizzys
             .iter()
             .map(|((y, x), delta)| {
@@ -62,7 +62,7 @@ fn main() {
     println!("blizzard pattern detected {:?}", pat);
     let fs = &frees[pat.0..pat.1];
 
-    let (_, time_to_exit) = walk(&fs, (-1, 0), 1, (size_y - 1, size_x - 1), size_y, size_x)
+    let (_, time_to_exit) = walk(&fs, (-1, 0), 1, (size_y - 1, size_x - 1))
         .expect("to get out eventually");
     println!("part1: {}", time_to_exit);
 
@@ -71,8 +71,6 @@ fn main() {
         (size_y, size_x - 2),
         time_to_exit + 1,
         (0, 0),
-        size_y,
-        size_x,
     )
     .expect("to get back to start");
     println!("part2: {:?}", time_to_entrance);
@@ -82,8 +80,6 @@ fn main() {
         (0, 0),
         time_to_entrance + 1,
         (size_y - 1, size_x - 1),
-        size_y,
-        size_x,
     )
     .expect("to get out a second time");
 
@@ -95,8 +91,6 @@ fn walk(
     start: P,
     start_time: usize,
     end: P,
-    size_y: i32,
-    size_x: i32,
 ) -> Option<(P, usize)> {
     let mut visited = HashSet::new();
 
@@ -166,6 +160,7 @@ fn find_repeating_pattern<T: Eq>(xs: &Vec<T>) -> Option<(usize, usize, usize)> {
     None
 }
 
+#[allow(dead_code)]
 fn render(size_y: i32, size_x: i32, blizzys: &HashSet<P>) {
     let mut y = 0;
     println!("{}", "#".repeat(size_x as usize + 2));

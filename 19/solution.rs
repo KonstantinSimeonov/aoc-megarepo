@@ -1,5 +1,5 @@
 use std::fs;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 use std::thread;
 
 // ore -> clay -> obsidian -> geodes

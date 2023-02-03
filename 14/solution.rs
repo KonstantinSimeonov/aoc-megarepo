@@ -1,5 +1,4 @@
 use std::fs;
-use std::collections::HashSet;
 use std::cmp;
 
 fn main() {
@@ -67,7 +66,7 @@ fn main() {
         s += 1;
     }
 
-    render(&grid);
+    // render(&grid);
 
     println!("{}", s)
 }
@@ -94,6 +93,7 @@ fn step(grid: &Vec<Vec<char>>, (mut x, mut y): (usize, usize)) -> Option<(usize,
     }
 }
 
+#[allow(dead_code)]
 fn render(grid: &Vec<Vec<char>>) {
     println!("{}", grid.iter().map(|row| row.iter().collect::<String>()).collect::<Vec<String>>().join("\n"))
 }

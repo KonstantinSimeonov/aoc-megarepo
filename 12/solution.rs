@@ -70,6 +70,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn render(grid: &Vec<Vec<u8>>) {
     for row in grid {
         println!(

@@ -4,6 +4,7 @@ use std::collections::HashMap;
 type DirMap<'a> = HashMap<String, Vec<(&'a str, u32, bool)>>;
 
 // display the dirs for lolz
+#[allow(dead_code)]
 fn tree(dirs: &DirMap, start: &str, depth: usize) {
     match dirs.get(start) {
         Some(files) => {

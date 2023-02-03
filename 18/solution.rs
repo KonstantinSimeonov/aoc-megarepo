@@ -5,7 +5,7 @@ fn add3(x: &(i32, i32, i32), y: &(i32, i32, i32)) -> (i32, i32, i32) {
 }
 
 fn is_inside(&(x, y, z): &(i32, i32, i32), min: i32, max: i32) -> bool {
-    [x, y, z].into_iter().all(|&c| min <= c && c <= max)
+    [x, y, z].iter().all(|&c| min <= c && c <= max)
 }
 
 fn main() {

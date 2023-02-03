@@ -161,6 +161,7 @@ fn right(x: i32) -> i32 {
     x >> 1
 }
 
+#[allow(dead_code)]
 fn render(stack: &Vec<i32>) {
     stack
         .iter()
