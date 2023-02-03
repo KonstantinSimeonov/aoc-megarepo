@@ -2,7 +2,13 @@
 for d in */; do
     echo $d
     cd $d
-    rustc -C opt-level=3 -o solution ./solution.rs
-    #time ./solution
+    for f in *.rs; do
+        rustc -C opt-level=3 -o solution "$f"
+        time ./solution
+    done
+
+    echo DONE
+    echo ""
+
     cd ..
 done
