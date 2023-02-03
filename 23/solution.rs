@@ -1,4 +1,7 @@
-use std::{fs, collections::{HashSet, HashMap, VecDeque}};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    fs,
+};
 
 type P = (i32, i32);
 type Coords = HashSet<P>;
@@ -7,7 +10,7 @@ const DIRS: [[P; 3]; 4] = [
     [(-1, -1), (-1, 0), (-1, 1)],
     [(1, -1), (1, 0), (1, 1)],
     [(-1, -1), (0, -1), (1, -1)],
-    [(-1, 1), (0, 1), (1, 1)]
+    [(-1, 1), (0, 1), (1, 1)],
 ];
 
 fn propose_move(elves: &Coords, dirs: &VecDeque<[P; 3]>) -> Coords {
@@ -16,23 +19,32 @@ fn propose_move(elves: &Coords, dirs: &VecDeque<[P; 3]>) -> Coords {
         .map(|&(y, x)| {
             let d = dirs
                 .iter()
-                .filter(|&ds| ds.iter().all(|&(dy, dx)| !elves.contains(&(y + dy, x + dx))))
+                .filter(|&ds| {
+                    ds.iter()
+                        .all(|&(dy, dx)| !elves.contains(&(y + dy, x + dx)))
+                })
                 .collect::<Vec<_>>();
 
             if d.len() == 4 {
-                return ((y, x), None)
+                return ((y, x), None);
             }
 
-            ((y, x), d.first().map(|ds| match ds[1] {
-                (dy, dx) => (y + dy, x + dx)
-            }))
+            (
+                (y, x),
+                d.first().map(|ds| match ds[1] {
+                    (dy, dx) => (y + dy, x + dx),
+                }),
+            )
         })
         .fold(
             HashMap::<Option<P>, Vec<P>>::new(),
             |mut props, (pos, prop)| {
-                props.entry(prop).and_modify(|sug| sug.push(pos.clone())).or_insert(vec![pos]);
                 props
-            }
+                    .entry(prop)
+                    .and_modify(|sug| sug.push(pos.clone()))
+                    .or_insert(vec![pos]);
+                props
+            },
         );
     //render(&elves);
 
@@ -42,7 +54,7 @@ fn propose_move(elves: &Coords, dirs: &VecDeque<[P; 3]>) -> Coords {
         .into_iter()
         .flat_map(|(dest, goers)| match dest {
             Some(pos) if goers.len() == 1 => vec![pos],
-            _ => goers
+            _ => goers,
         })
         .collect::<Coords>();
 
@@ -59,9 +71,13 @@ fn main() {
         .lines()
         .enumerate()
         .flat_map(|(i, line)| {
-            line.chars()
-                .enumerate()
-                .filter_map(move |(j, c)| if c == '#' { Some((i as i32, j as i32)) } else { None })
+            line.chars().enumerate().filter_map(move |(j, c)| {
+                if c == '#' {
+                    Some((i as i32, j as i32))
+                } else {
+                    None
+                }
+            })
         })
         .collect::<Coords>();
 
@@ -76,7 +92,7 @@ fn main() {
 
         if cs1 == cs {
             println!("finished on {}", r);
-            break
+            break;
         }
 
         cs = cs1;
@@ -100,12 +116,7 @@ fn rect(coords: &Coords) -> (i32, i32, i32, i32) {
     ys.sort();
     xs.sort();
 
-    (
-        ys[0],
-        ys[ys.len() - 1],
-        xs[0],
-        xs[xs.len() - 1],
-    )
+    (ys[0], ys[ys.len() - 1], xs[0], xs[xs.len() - 1])
 }
 
 fn count_empty(coords: &Coords) -> i32 {

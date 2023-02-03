@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs, cmp};
+use std::{cmp, collections::HashSet, fs};
 
 fn add3(x: &(i32, i32, i32), y: &(i32, i32, i32)) -> (i32, i32, i32) {
     (x.0 + y.0, x.1 + y.1, x.2 + y.2)
@@ -47,7 +47,9 @@ fn main() {
     let bounds = cubes
         .iter()
         .flat_map(|(x, y, z)| [x, y, z])
-        .fold((i32::MAX, i32::MIN), |(min, max), &x| (cmp::min(min, x), cmp::max(max, x)));
+        .fold((i32::MAX, i32::MIN), |(min, max), &x| {
+            (cmp::min(min, x), cmp::max(max, x))
+        });
 
     let min = bounds.0 - 1;
     let max = bounds.1 + 1;
@@ -63,17 +65,17 @@ fn main() {
             .filter(|p| is_inside(p, min, max))
             .filter(|p| {
                 if visited.contains(p) {
-                    return false
+                    return false;
                 }
 
                 if cubes.contains(p) {
                     outside_surface += 1;
-                    return false
+                    return false;
                 }
 
                 visited.insert(*p);
 
-                return true
+                return true;
             });
 
         cells.extend(next);

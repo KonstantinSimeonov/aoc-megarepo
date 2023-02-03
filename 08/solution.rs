@@ -1,9 +1,8 @@
-use std::fs;
 use std::collections::HashSet;
+use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("./input")
-        .expect("da stuff to happin");
+    let input = fs::read_to_string("./input").expect("da stuff to happin");
 
     let trees = input
         .lines()
@@ -52,7 +51,6 @@ fn main() {
     let p1 = hor_viz.union(&vert_viz).count() + always_vis;
     println!("part1: {}", p1);
 
-
     let part2 = (1..trees.len() - 1)
         .flat_map(|i| (1..trees[i].len() - 1).map(move |j| (i, j)))
         .map(|(i, j)| calc_sight(&trees, i, j))
@@ -63,26 +61,20 @@ fn main() {
 
 fn calc_sight(trees: &Vec<Vec<char>>, i: usize, j: usize) -> usize {
     let x = trees[i][j];
-    let up = (0..i)
-        .rev()
-        .take_while(|&r| trees[r][j] < x)
-        .count();
+    let up = (0..i).rev().take_while(|&r| trees[r][j] < x).count();
 
     let down = (i + 1..trees.len())
         .take_while(|&r| trees[r][j] < x)
         .count();
 
-    let left = (0..j)
-        .rev()
-        .take_while(|&c| trees[i][c] < x)
-        .count();
+    let left = (0..j).rev().take_while(|&c| trees[i][c] < x).count();
 
     let right = (j + 1..trees.len())
         .take_while(|&c| trees[i][c] < x)
         .count();
 
     (up + (up != i) as usize)
-    * (down + (trees.len() - down - 1 != i) as usize)
-    * (left + (left != j) as usize)
-    * (right + (trees[i].len() - right - 1 != j) as usize)
+        * (down + (trees.len() - down - 1 != i) as usize)
+        * (left + (left != j) as usize)
+        * (right + (trees[i].len() - right - 1 != j) as usize)
 }

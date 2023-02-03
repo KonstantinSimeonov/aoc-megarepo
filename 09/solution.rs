@@ -30,10 +30,7 @@ fn main() {
                 let (to_x, to_y) = tails[i - 1];
                 let (x, y) = tails[i];
                 if (to_x - x).abs() > 1 || (to_y - y).abs() > 1 {
-                    tails[i] = (
-                        x + (to_x - x).signum(),
-                        y + (to_y - y).signum()
-                    );
+                    tails[i] = (x + (to_x - x).signum(), y + (to_y - y).signum());
                 }
             }
 

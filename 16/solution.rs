@@ -113,7 +113,8 @@ fn run_all_paths<'a>(
     let paths = graph.get(&current).unwrap();
     let new_turned = insert(turned, current);
 
-    all_paths.entry(new_turned)
+    all_paths
+        .entry(new_turned)
         .and_modify(|x| *x = cmp::max(*x, score))
         .or_insert(score);
 
@@ -128,7 +129,14 @@ fn run_all_paths<'a>(
         }
 
         let released = rate * new_left;
-        run_all_paths(graph, node, new_left, new_turned, score + released, all_paths)
+        run_all_paths(
+            graph,
+            node,
+            new_left,
+            new_turned,
+            score + released,
+            all_paths,
+        )
     }
 }
 

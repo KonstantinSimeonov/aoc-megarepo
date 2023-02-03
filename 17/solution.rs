@@ -2,8 +2,7 @@ use std::fs;
 use std::iter;
 
 fn main() {
-    let input = fs::read_to_string("./input")
-        .expect("lol");
+    let input = fs::read_to_string("./input").expect("lol");
 
     let dirs = input
         .trim()
@@ -90,7 +89,8 @@ fn fall_rocks(gasses: &Vec<bool>, rocks_count: usize) -> Vec<usize> {
 }
 
 fn fall_rocks_big(heights: &Vec<usize>, target: usize) -> usize {
-    let deltas = heights.iter()
+    let deltas = heights
+        .iter()
         .zip(heights.iter().skip(1))
         .map(|(prev, curr)| curr - prev)
         .collect::<Vec<_>>();
@@ -116,11 +116,7 @@ fn fall_rocks_big(heights: &Vec<usize>, target: usize) -> usize {
     target_height
 }
 
-fn fall<'a>(
-    rock: &[i32; 4],
-    dirs: &mut impl Iterator<Item = &'a bool>,
-    stack: &mut Vec<i32>,
-) {
+fn fall<'a>(rock: &[i32; 4], dirs: &mut impl Iterator<Item = &'a bool>, stack: &mut Vec<i32>) {
     let mut i = stack.len() - 1;
     let mut r = *rock;
     while !collides(&r, i, stack) {

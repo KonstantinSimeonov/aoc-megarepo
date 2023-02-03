@@ -31,7 +31,7 @@ fn main() {
                 cycle += 1;
 
                 part1 += cycle_value(cycle, x);
-            },
+            }
             add_cmd => {
                 // draw
                 screen[cycle as usize] = pixel_value(cycle, x);
@@ -53,15 +53,18 @@ fn main() {
                 x += add_cmd[5..].parse::<i32>().unwrap();
             }
         }
-
     }
-
 
     println!("{:?}", part1);
 
     let part2 = screen
         .chunks(40)
-        .map(|line| line.iter().map(|&b| if b { "#" } else { " " }).collect::<Vec<&str>>().join(""))
+        .map(|line| {
+            line.iter()
+                .map(|&b| if b { "#" } else { " " })
+                .collect::<Vec<&str>>()
+                .join("")
+        })
         .collect::<Vec<String>>()
         .join("\n");
 

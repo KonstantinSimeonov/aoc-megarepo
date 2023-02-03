@@ -1,5 +1,5 @@
-use std::{cmp, collections::HashSet, fs};
 use std::thread;
+use std::{cmp, collections::HashSet, fs};
 
 type P2 = (i32, i32);
 
@@ -68,13 +68,13 @@ fn main() {
 
 fn run_range(pairs: &Vec<(P2, P2)>, s: usize, e: usize) -> Option<u128> {
     let res = (s..e).find_map(|ty| {
-            let xs = calc_empty(ty as i32, &pairs);
+        let xs = calc_empty(ty as i32, &pairs);
 
-            match xs[..] {
-                [(_, e), _] => Some((e + 1, ty)),
-                _ => None
-            }
-        });
+        match xs[..] {
+            [(_, e), _] => Some((e + 1, ty)),
+            _ => None,
+        }
+    });
 
     res.map(|(dbx, dby)| {
         let x = dbx as u128;

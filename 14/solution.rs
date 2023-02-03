@@ -1,34 +1,39 @@
-use std::fs;
 use std::cmp;
+use std::fs;
 
 fn main() {
     let input = fs::read_to_string("./input").expect("something");
 
     let coords = input
         .lines()
-        .map(|line| line.split(" -> ").map(
-            |tup| {
-            let (x, y) = tup.split_once(",").unwrap();
-            (x.parse::<i32>().unwrap(), y.parse::<i32>().unwrap())
-        }).collect::<Vec<(i32, i32)>>())
+        .map(|line| {
+            line.split(" -> ")
+                .map(|tup| {
+                    let (x, y) = tup.split_once(",").unwrap();
+                    (x.parse::<i32>().unwrap(), y.parse::<i32>().unwrap())
+                })
+                .collect::<Vec<(i32, i32)>>()
+        })
         .collect::<Vec<Vec<(i32, i32)>>>();
 
-    let (minx, maxx, maxy) = coords
-        .iter()
-        .flatten()
-        .fold(
-            (i32::MAX, 0, 0),
-            |(cminx, cmaxx, cmaxy), (x, y)| (
-                cmp::min(cminx, *x),
-                cmp::max(cmaxx, *x),
-                cmp::max(cmaxy, *y),
-            )
-        );
+    let (minx, maxx, maxy) =
+        coords
+            .iter()
+            .flatten()
+            .fold((i32::MAX, 0, 0), |(cminx, cmaxx, cmaxy), (x, y)| {
+                (
+                    cmp::min(cminx, *x),
+                    cmp::max(cmaxx, *x),
+                    cmp::max(cmaxy, *y),
+                )
+            });
 
     let off = maxy * 3;
 
     let mut grid = vec![];
-    grid.resize_with((maxy + 3) as usize, || vec!['.'; (maxx - minx + off * 2 + 2) as usize]);
+    grid.resize_with((maxy + 3) as usize, || {
+        vec!['.'; (maxx - minx + off * 2 + 2) as usize]
+    });
 
     for line in coords.iter() {
         for i in 0..line.len() - 1 {
@@ -58,7 +63,9 @@ fn main() {
 
     let mut s = 0;
     while let Some((x, y)) = step(&grid, (startx as usize, 0)) {
-        if grid[y][x] == '+' { break; }
+        if grid[y][x] == '+' {
+            break;
+        }
         grid[y][x] = 'o';
 
         //render(&grid);
@@ -74,7 +81,7 @@ fn main() {
 fn step(grid: &Vec<Vec<char>>, (mut x, mut y): (usize, usize)) -> Option<(usize, usize)> {
     loop {
         if y >= grid.len() || x == 0 || x >= grid[0].len() {
-            return None
+            return None;
         }
 
         let nr = &grid[y + 1];
@@ -85,7 +92,7 @@ fn step(grid: &Vec<Vec<char>>, (mut x, mut y): (usize, usize)) -> Option<(usize,
         } else if nr[x + 1] == '.' {
             x + 1
         } else {
-            return Some((x, y))
+            return Some((x, y));
         };
 
         x = new_col;
@@ -95,5 +102,11 @@ fn step(grid: &Vec<Vec<char>>, (mut x, mut y): (usize, usize)) -> Option<(usize,
 
 #[allow(dead_code)]
 fn render(grid: &Vec<Vec<char>>) {
-    println!("{}", grid.iter().map(|row| row.iter().collect::<String>()).collect::<Vec<String>>().join("\n"))
+    println!(
+        "{}",
+        grid.iter()
+            .map(|row| row.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join("\n")
+    )
 }

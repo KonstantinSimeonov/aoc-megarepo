@@ -1,5 +1,5 @@
+use std::collections::HashSet;
 use std::fs;
-use std::collections::{HashSet};
 use std::thread;
 
 // ore -> clay -> obsidian -> geodes
@@ -14,7 +14,7 @@ struct BP {
 
     max_ore: i32,
     max_clay: i32,
-    max_obs: i32
+    max_obs: i32,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -22,7 +22,7 @@ struct Income {
     ore: i32,
     clay: i32,
     obs: i32,
-    geode: i32
+    geode: i32,
 }
 
 impl Income {
@@ -36,7 +36,7 @@ struct Bank {
     ore: i32,
     clay: i32,
     obs: i32,
-    geode: i32
+    geode: i32,
 }
 
 impl Bank {
@@ -118,8 +118,18 @@ fn main() {
 
     println!("{:?}", bps[0]);
 
-    let bank = Bank { ore: 0, clay: 0, obs: 0, geode: 0 };
-    let inc = Income { ore: 1, clay: 0, obs: 0, geode: 0 };
+    let bank = Bank {
+        ore: 0,
+        clay: 0,
+        obs: 0,
+        geode: 0,
+    };
+    let inc = Income {
+        ore: 1,
+        clay: 0,
+        obs: 0,
+        geode: 0,
+    };
 
     //println!("{:?}", sim(inc, &bps[1], bank, 32, &mut HashMap::new()));
 
@@ -155,12 +165,12 @@ fn main() {
 
 fn sim(inc: Income, bp: &BP, bank: Bank, left: i32, cache: &mut HashSet<(i32, i32, i32)>) -> i32 {
     if cache.contains(&(bank.h(), inc.h(), left)) {
-        return 0
+        return 0;
     }
 
     if left <= 0 {
         //println!("{:?}", bank);
-        return bank.geode
+        return bank.geode;
     }
 
     let bs = builds(&bank, bp, &inc);

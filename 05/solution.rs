@@ -1,8 +1,7 @@
 use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("./input")
-        .expect("stuff");
+    let input = fs::read_to_string("./input").expect("stuff");
 
     let (mut stacks, moves) = {
         let mut split_it = input.split("\n\n");
@@ -12,27 +11,25 @@ fn main() {
                 .next()
                 .unwrap()
                 .split("\n")
-                .map(
-                    |line| line
-                         .chars()
-                         .skip(1)
-                         .step_by(4)
-                         .collect()
-                )
+                .map(|line| line.chars().skip(1).step_by(4).collect())
                 .collect();
 
             stacks.pop();
 
             // transpose for ez clap
-            (0..stacks[0].len()).map(
-                // .rev() because stack lol
-                |i| stacks
-                    .iter()
-                    .rev()
-                    .map(|v| v[i])
-                    .filter(|&c| c != ' ')
-                    .collect()
-            ).collect::<Vec<Vec<char>>>()
+            (0..stacks[0].len())
+                .map(
+                    // .rev() because stack lol
+                    |i| {
+                        stacks
+                            .iter()
+                            .rev()
+                            .map(|v| v[i])
+                            .filter(|&c| c != ' ')
+                            .collect()
+                    },
+                )
+                .collect::<Vec<Vec<char>>>()
         };
 
         let instructions = split_it
@@ -43,12 +40,11 @@ fn main() {
                 [_, count, _, from, _, to] => (
                     count.parse::<usize>().unwrap(),
                     from.parse::<usize>().unwrap() - 1,
-                    to.parse::<usize>().unwrap() - 1
+                    to.parse::<usize>().unwrap() - 1,
                 ),
-                _ => unreachable!()
+                _ => unreachable!(),
             })
             .collect::<Vec<(usize, usize, usize)>>();
-
 
         (init, instructions)
     };
@@ -65,6 +61,9 @@ fn main() {
         }
     }
 
-    let result = stacks.into_iter().map(|v| v.last().unwrap().clone()).collect::<String>();
+    let result = stacks
+        .into_iter()
+        .map(|v| v.last().unwrap().clone())
+        .collect::<String>();
     println!("{}", result);
 }

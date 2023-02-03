@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 type DirMap<'a> = HashMap<String, Vec<(&'a str, u32, bool)>>;
 
@@ -19,7 +19,7 @@ fn tree(dirs: &DirMap, start: &str, depth: usize) {
                 }
             }
         }
-        None => println!("no such dir {}", start)
+        None => println!("no such dir {}", start),
     }
 }
 
@@ -38,43 +38,37 @@ fn calc_dir_sizes(dirs: &DirMap, start: &str, sizes: &mut HashMap<String, u32>) 
             }
 
             sizes.insert(start.to_string(), sum);
-        },
-        _ => println!("kekw")
+        }
+        _ => println!("kekw"),
     }
 }
 
 fn main() {
-    let input = fs::read_to_string("./input")
-        .expect("stuff");
+    let input = fs::read_to_string("./input").expect("stuff");
 
-    let (map, _): (DirMap, Vec<&str>) = input
-        .lines()
-        .fold(
-            (HashMap::new(), vec![]),
-            |(mut dirs, mut cwd_stack), b| match b.split(' ').collect::<Vec<&str>>()[..] {
-                ["$", "cd", ".."] => {
-                    cwd_stack.pop();
-                    (dirs, cwd_stack)
-                },
-                ["$", "cd", dir_name] => {
-                    cwd_stack.push(dir_name);
-                    dirs.insert(cwd_stack.join("/"), vec![]);
-                    (dirs, cwd_stack)
-                },
-                ["$", "ls"] => (dirs, cwd_stack),
-                [a, b] => {
-                    let dir_name = cwd_stack.join("/");
-                    let children = dirs
-                        .get_mut(&dir_name).unwrap();
-
-                    children.push(
-                        (b, a.parse::<u32>().unwrap_or(0), a == "dir")
-                    );
-                    (dirs, cwd_stack)
-                },
-                _ => (dirs, cwd_stack)
+    let (map, _): (DirMap, Vec<&str>) = input.lines().fold(
+        (HashMap::new(), vec![]),
+        |(mut dirs, mut cwd_stack), b| match b.split(' ').collect::<Vec<&str>>()[..] {
+            ["$", "cd", ".."] => {
+                cwd_stack.pop();
+                (dirs, cwd_stack)
             }
-        );
+            ["$", "cd", dir_name] => {
+                cwd_stack.push(dir_name);
+                dirs.insert(cwd_stack.join("/"), vec![]);
+                (dirs, cwd_stack)
+            }
+            ["$", "ls"] => (dirs, cwd_stack),
+            [a, b] => {
+                let dir_name = cwd_stack.join("/");
+                let children = dirs.get_mut(&dir_name).unwrap();
+
+                children.push((b, a.parse::<u32>().unwrap_or(0), a == "dir"));
+                (dirs, cwd_stack)
+            }
+            _ => (dirs, cwd_stack),
+        },
+    );
 
     //println!("{:?}\n", map);
 

@@ -62,36 +62,21 @@ fn main() {
     println!("blizzard pattern detected {:?}", pat);
     let fs = &frees[pat.0..pat.1];
 
-    let (_, time_to_exit) = walk(&fs, (-1, 0), 1, (size_y - 1, size_x - 1))
-        .expect("to get out eventually");
+    let (_, time_to_exit) =
+        walk(&fs, (-1, 0), 1, (size_y - 1, size_x - 1)).expect("to get out eventually");
     println!("part1: {}", time_to_exit);
 
-    let (_, time_to_entrance) = walk(
-        &fs,
-        (size_y, size_x - 2),
-        time_to_exit + 1,
-        (0, 0),
-    )
-    .expect("to get back to start");
+    let (_, time_to_entrance) =
+        walk(&fs, (size_y, size_x - 2), time_to_exit + 1, (0, 0)).expect("to get back to start");
     println!("part2: {:?}", time_to_entrance);
 
-    let (_, part2) = walk(
-        &fs,
-        (0, 0),
-        time_to_entrance + 1,
-        (size_y - 1, size_x - 1),
-    )
-    .expect("to get out a second time");
+    let (_, part2) = walk(&fs, (0, 0), time_to_entrance + 1, (size_y - 1, size_x - 1))
+        .expect("to get out a second time");
 
     println!("part2: {}", part2)
 }
 
-fn walk(
-    frees: &[HashSet<P>],
-    start: P,
-    start_time: usize,
-    end: P,
-) -> Option<(P, usize)> {
+fn walk(frees: &[HashSet<P>], start: P, start_time: usize, end: P) -> Option<(P, usize)> {
     let mut visited = HashSet::new();
 
     let mut nodes = VecDeque::from([(start, start_time)]);
