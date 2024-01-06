@@ -1,0 +1,10 @@
+LR
+
+KKA = (KKB, XXX)
+KKB = (XXX, KKZ)
+KKZ = (KKB, XXX)
+VVA = (VVB, XXX)
+VVB = (VVC, VVC)
+VVC = (VVZ, VVZ)
+VVZ = (VVB, VVB)
+XXX = (XXX, XXX)
