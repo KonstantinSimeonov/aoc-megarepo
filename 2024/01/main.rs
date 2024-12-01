@@ -30,9 +30,9 @@ fn solve(input: String) -> (i32, i32) {
 }
 
 fn main() {
-  let input0 = fs::read_to_string("./input0").expect("stuff");
-  let input = fs::read_to_string("./input").expect("stuff");
+  let input0 = fs::read_to_string("./01/input0").expect("stuff");
+  let input = fs::read_to_string("./01/input").expect("stuff");
 
-  println!("{:?}", solve(input0));
-  println!("{:?}", solve(input));
+  println!("test {:?}", solve(input0));
+  println!("answer {:?}", solve(input));
 }
