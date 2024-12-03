@@ -9,24 +9,18 @@ enum Cmd {
 }
 
 fn solve(input: &str) -> (i32, i32) {
-    let stuff = Regex::new(r"(mul|do|don't)\((\d+,\d+)?\)").unwrap();
-    let commands = stuff.captures_iter(input).filter_map(|caps| {
+    let stuff = Regex::new(r"mul\((\d+),(\d+)\)|do\(\)|don't\(\)").unwrap();
+    let commands = stuff.captures_iter(input).map(|caps| {
         let captures = caps
             .iter()
             .filter_map(|xs| xs.map(|m| m.as_str()))
             .collect::<Vec<_>>();
 
-        match captures[1] {
-            "mul" => captures.get(2).map(|&args| {
-                let xy = args
-                    .split(',')
-                    .map(|num| num.parse::<i32>().unwrap())
-                    .collect::<Vec<_>>();
-                Cmd::Mul(xy[0], xy[1])
-            }),
-            "do" => Some(Cmd::Do),
-            "don't" => Some(Cmd::Dont),
-            _ => None,
+        match captures[..] {
+            ["do()"] => Cmd::Do,
+            ["don't()"] => Cmd::Dont,
+            [_, x, y] => Cmd::Mul(x.parse::<i32>().unwrap(), y.parse::<i32>().unwrap()),
+            _ => panic!(),
         }
     });
 
@@ -49,9 +43,9 @@ fn solve(input: &str) -> (i32, i32) {
 }
 
 fn main() {
-  let tests = ["./03/input0", "./03/input1", "./03/input"];
-  for t in tests {
-    let input = fs::read_to_string(t).unwrap();
-    println!("{} {:?}", t, solve(&input));
-  }
+    let tests = ["./03/input0", "./03/input1", "./03/input"];
+    for t in tests {
+        let input = fs::read_to_string(t).unwrap();
+        println!("{} {:?}", t, solve(&input));
+    }
 }
