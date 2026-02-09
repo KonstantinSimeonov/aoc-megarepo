@@ -39,4 +39,8 @@ path = "src/bin/08/main.rs"
 name = "09"
 path = "src/bin/09/main.rs"
 
+[[bin]]
+name = "10"
+path = "src/bin/10/main.rs"
+
 [dependencies]
