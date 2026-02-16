@@ -1,11 +1,14 @@
-use std::{collections::HashMap, i64, iter, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
 use aoc2026::Inputs;
+
+use crate::equation::{Equation, EquationSystem};
+mod equation;
 
 fn main() {
     let inputs = Inputs::read();
     solve(&inputs.test_inputs[0]);
-    //solve(&inputs.input);
+    solve(&inputs.input);
 }
 
 fn solve(input: &str) {
@@ -16,27 +19,40 @@ fn solve(input: &str) {
 
     println!("{} machines", machines.len());
 
-    //let part1: i64 = machines
-    //    .iter()
-    //    .map(|m| {
-    //        //println!("{:?}", m);
-    //        let x = m.min_toggles();
-    //        //println!("{}\n", x);
-    //        x
-    //    })
-    //    .sum();
-    //println!("{}", part1);
+    //part1(&machines);
+    part2(&machines);
+}
 
-    let part2: i64 = machines.iter()
+fn part2(machines: &[Machine]) {
+    let part2 = machines.iter()
         .map(|m| {
-            println!("{:?}", m);
-            println!("{:?}", m.edges);
-            let x = m.min_counters();
-            println!("{}", x);
-            x
-        }).sum();
+            //println!("{:?}", m);
+            //m.equations.print();
+            //println!("====== bounds ======");
+            let maxes: Vec<i64> = m.toggles.iter().map(
+                |toggle|
+                        toggle
+                            .iter()
+                            .map(|t| m.counters[*t as usize])
+                            .min()
+                            .unwrap()
+            ).collect();
 
-    println!("{}", part2)
+            m.equations.bounds(&maxes).unwrap()
+        }).sum::<i64>();
+
+    println!("{}", part2);
+}
+
+#[allow(dead_code)]
+fn part1(machines: &[Machine]) {
+    let part1: i64 = machines
+        .iter()
+        .map(|m| {
+            m.min_toggles()
+        })
+        .sum();
+    println!("{}", part1);
 }
 
 #[derive(Debug)]
@@ -45,7 +61,7 @@ struct Machine {
     bit_toggles: Vec<i64>,
     toggles: Vec<Vec<i64>>,
     counters: Vec<i64>,
-    edges: Vec<Vec<Vec<i64>>>
+    equations: EquationSystem
 }
 
 impl Machine {
@@ -193,17 +209,20 @@ impl FromStr for Machine {
             |n| n.parse::<i64>().unwrap()
         ).collect();
 
-        let mut edges: Vec<Vec<Vec<i64>>> = Vec::new();
+        let mut equations: Vec<Equation> = vec![];
         for i in 0..counters.len() {
-            let v: Vec<Vec<i64>> = toggles.iter().filter(
-                |&t| t.iter().any(|x| *x == i as i64)
-            ).map(|x| x.clone()).collect();
+            let mut variables = vec![];
+            for toggle in toggles.iter() {
+                let n = if toggle.iter().any(|x| *x == i as i64) { 1 } else { 0 };
+                variables.push(n);
+            }
 
-            edges.push(v);
+            equations.push(Equation { variables, constant: -counters[i], variable_result: None })
         }
 
 
-        Ok(Machine { bit_goal, bit_toggles, toggles, counters, edges })
+
+        Ok(Machine { bit_goal, bit_toggles, toggles, counters, equations: EquationSystem { equations } })
     }
 }
 
