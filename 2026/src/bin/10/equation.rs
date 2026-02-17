@@ -4,14 +4,6 @@ pub struct EquationSystem {
 }
 
 impl EquationSystem {
-    #[allow(dead_code)]
-    pub fn print(&self) {
-        println!("System of {} equations:", self.equations.len());
-        for e in self.equations.iter() {
-            e.print();
-        }
-    }
-
     pub fn substite(&self) -> EquationSystem {
         let mut equations = self.equations.clone();
 
@@ -24,87 +16,170 @@ impl EquationSystem {
 
             equations[i] = eq.solve_for(first_var_index.unwrap());
             for j in i + 1..equations.len() {
-                equations[j] = equations[j].substite(&equations[i]);
+                equations[j] = equations[j].substitute(&equations[i]);
             }
         }
 
         EquationSystem { equations }
     }
 
-    pub fn minimize(&self, uppers: &Vec<i64>) -> Option<i64> {
+    pub fn minimize(&self, uppers_bounds: &[i64]) -> Option<i64> {
         let solved = self.substite();
-        let solved_vars: Vec<usize> = solved.equations.iter().filter_map(|eq| eq.variable_result).collect();
+        let solved_vars: Vec<VarId> = solved
+            .equations
+            .iter()
+            .filter_map(|eq| eq.variable_result)
+            .collect();
         let total_vars = self.var_count();
-        let free_vars: Vec<usize> = (0..total_vars)
+        let free_vars: Vec<VarId> = (0..total_vars)
             .filter(|i| !solved_vars.contains(i))
             .collect();
 
-        let maxes: Vec<i64> = free_vars.iter().map(|var_index| uppers[*var_index]).collect();
-        let min = solved.minimize_solved(&free_vars, &mut vec![0; total_vars], &maxes);
+        let maxes: Vec<i64> = free_vars
+            .iter()
+            .map(|var_index| uppers_bounds[*var_index])
+            .collect();
 
-        min
+        solved.minimize_solved(&free_vars, &mut vec![0; total_vars], &maxes)
     }
 
     pub fn var_count(&self) -> usize {
-        self.equations[0].variables.len()
+        self.equations[0].coefficients.len()
     }
 
-    pub fn minimize_solved(&self, free: &[usize], values: &mut Vec<i64>, maxes: &[i64]) -> Option<i64> {
+    pub fn minimize_solved(
+        &self,
+        free: &[VarId],
+        values: &mut Vec<i64>,
+        maxes: &[i64],
+    ) -> Option<i64> {
         if free.is_empty() {
-            return self.eval(values)
+            return self.eval(values);
         }
 
         let var = free[0];
-        (0..=maxes[0]).filter_map(
-            |v| {
+        (0..=maxes[0])
+            .filter_map(|v| {
                 values[var] = v;
                 self.minimize_solved(&free[1..], values, &maxes[1..])
-            }
-        ).min()
+            })
+            .min()
     }
 
-    pub fn eval(&self, vars: &Vec<i64>) -> Option<i64> {
-        //println!("eval:");
-        let mut variables: Vec<i64> = vars.clone();
+    pub fn eval(&self, variable_values: &Vec<i64>) -> Option<i64> {
+        let mut values: Vec<i64> = variable_values.clone();
 
         for eq in self.equations.iter().rev() {
             if let Some(var_index) = eq.variable_result {
-                let coeff = eq.variables[var_index];
-                // variables[var_index] is 0, so this is everything else
-                let rest = eq.eval(&variables);
+                let coeff = eq.coefficients[var_index];
+                // values[var_index] is 0, so this is everything else
+                let rest = eq.eval(&values);
 
                 if rest % coeff != 0 {
-                    return None
+                    return None;
                 }
 
                 let var_value = -rest / coeff;
                 if var_value < 0 {
-                    return None
+                    return None;
                 }
 
-                //println!("    evaluated {} to {} (var_index={})", eq, var_value, var_index);
-                variables[var_index] = var_value;
+                values[var_index] = var_value;
             }
         }
 
-        Some(variables.iter().sum())
+        Some(values.iter().sum())
     }
 
+    #[allow(dead_code)]
+    pub fn print(&self) {
+        println!("System of {} equations:", self.equations.len());
+        for e in self.equations.iter() {
+            e.print();
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Equation {
-    pub variables: Vec<i64>,
+    pub coefficients: Vec<i64>,
     pub constant: i64,
-    pub variable_result: Option<usize>,
+    pub variable_result: Option<VarId>,
+}
+
+impl Equation {
+    pub fn indexes(&self) -> impl Iterator<Item = usize> {
+        self.coefficients
+            .iter()
+            .enumerate()
+            .filter(|(_, coeff)| **coeff != 0)
+            .map(|(i, _)| i)
+    }
+
+    pub fn first_index(&self) -> Option<usize> {
+        self.indexes().next()
+    }
+
+    pub fn solve_for(&self, var_index: VarId) -> Equation {
+        Equation {
+            coefficients: self.coefficients.clone(),
+            constant: self.constant,
+            variable_result: Some(var_index),
+        }
+    }
+
+    pub fn substitute(&self, other: &Equation) -> Equation {
+        let var_index = other.variable_result.unwrap();
+        let a = other.coefficients[var_index];
+        let b = self.coefficients[var_index];
+
+        if b == 0 {
+            return self.clone();
+        }
+
+        let coefficients = self
+            .coefficients
+            .iter()
+            .zip(other.coefficients.iter())
+            .map(|(s, o)| a * s - b * o)
+            .collect();
+
+        let constant = a * self.constant - b * other.constant;
+
+        Equation {
+            coefficients,
+            constant,
+            variable_result: None,
+        }
+    }
+
+    pub fn eval(&self, variable_values: &[i64]) -> i64 {
+        self.constant
+            + self
+                .coefficients
+                .iter()
+                .zip(variable_values.iter())
+                .map(|(coeff, value)| coeff * value)
+                .sum::<i64>()
+    }
+
+    #[allow(dead_code)]
+    pub fn print(&self) {
+        println!(
+            "{:?} + {} = {:?}",
+            self.coefficients, self.constant, self.variable_result
+        );
+        println!("{}", self);
+        println!()
+    }
 }
 
 impl std::fmt::Display for Equation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let lolphabet = "abcdefghijklmnopqrstuvwzyz";
         let mut parts: Vec<String> = vec![];
-        for i in 0..self.variables.len() {
-            let coeff = self.variables[i];
+        for i in 0..self.coefficients.len() {
+            let coeff = self.coefficients[i];
             if coeff == 0 {
                 continue;
             }
@@ -142,66 +217,4 @@ impl std::fmt::Display for Equation {
     }
 }
 
-impl Equation {
-    pub fn indexes(&self) -> impl Iterator<Item = usize> {
-        (0..)
-            .zip(self.variables.iter())
-            .filter(|(_, coeff)| **coeff != 0)
-            .map(|(i, _)| i)
-    }
-
-    pub fn first_index(&self) -> Option<usize> {
-        self.indexes().next()
-    }
-
-    pub fn solve_for(&self, var_index: usize) -> Equation {
-        Equation {
-            variables: self.variables.clone(),
-            constant: self.constant,
-            variable_result: Some(var_index),
-        }
-    }
-
-    pub fn substite(&self, other: &Equation) -> Equation {
-        let var_index = other.variable_result.unwrap();
-        let a = other.variables[var_index];
-        let b = self.variables[var_index];
-
-        if b == 0 {
-            return self.clone();
-        }
-
-        let variables = self.variables.iter()
-            .zip(other.variables.iter())
-            .map(|(s, o)| a * s - b * o)
-            .collect();
-
-        let constant = a * self.constant - b * other.constant;
-
-        Equation {
-            variables,
-            constant,
-            variable_result: None,
-        }
-    }
-
-    pub fn eval(&self, variable_values: &[i64]) -> i64 {
-        self.constant
-            + self
-                .variables
-                .iter()
-                .zip(variable_values.iter())
-                .map(|(coeff, value)| coeff * value)
-                .sum::<i64>()
-    }
-
-    #[allow(dead_code)]
-    pub fn print(&self) {
-        println!(
-            "{:?} + {} = {:?}",
-            self.variables, self.constant, self.variable_result
-        );
-        println!("{}", self);
-        println!()
-    }
-}
+type VarId = usize;
