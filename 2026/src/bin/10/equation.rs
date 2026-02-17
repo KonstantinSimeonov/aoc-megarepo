@@ -75,11 +75,13 @@ impl EquationSystem {
                 // values[var_index] is 0, so this is everything else
                 let rest = eq.eval(&values);
 
+                // non-integer button presses, discard it
                 if rest % coeff != 0 {
                     return None;
                 }
 
                 let var_value = -rest / coeff;
+                // negative solution button presses, discard
                 if var_value < 0 {
                     return None;
                 }
@@ -133,6 +135,8 @@ impl Equation {
         let a = other.coefficients[var_index];
         let b = self.coefficients[var_index];
 
+        // the current equation isn't expressed in terms of the
+        // other equation. nothing to do
         if b == 0 {
             return self.clone();
         }
@@ -141,6 +145,23 @@ impl Equation {
             .coefficients
             .iter()
             .zip(other.coefficients.iter())
+            // do this multiplication with a and b to avoid
+            // having to divide and use floating point numbers, which
+            // opens a very annoying can of worms that I don't know how to
+            // deal with, because it yields non-integer results, like
+            // pressing a button 2.5 times.
+            //
+            // example:
+            // 2f = d + c + 3
+            // e = 3f - c + 4
+            //
+            // substitution of "2f = d + c + 3" into "e = 3f - c + 4") is a bit hairy,
+            // since we'd have to divide to get f and plug it into 3f. Instead, multiply
+            // the eq for f by 3 and the eq for e by 2 to get them both to be 6.
+            //
+            // 2e = 3(3(d + c + 3)) - 2(c + 4)
+            //
+            // For this example, a=2 and b=3.
             .map(|(s, o)| a * s - b * o)
             .collect();
 

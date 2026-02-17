@@ -35,10 +35,43 @@ struct Machine {
     // part 2
     toggles: Vec<Vec<i64>>,
     counters: Vec<i64>,
+
+    // The each counter provides a linear equation:
+    //
+    // (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7} becomes
+    // a   b     c   d     e     f
+    //
+    // e * (0, 2) + f * (0, 1) = 3
+    // b * (1, 3) + f * (0, 1) = 5
+    // c * (2) + d * (2, 3) + e * (0, 2) = 4
+    // a * (3) + b * (1, 3) + d * (2, 3) = 7
+    //
+    // each of the variables a, b, c, d, e, f represents
+    // how many times we clicked some buttons. The buttons
+    // are not actually relevent for those equations after
+    // we parse them initially, so the equations can be written as
+    // e + f = 3
+    // b + f = 5
+    // c + d + e = 4
+    // a + b + d = 7
+    //
+    // Our answer is the minimum of a + b + c + d + e + f where
+    // all of the equations above are still fullfilled.
     equations: EquationSystem,
 }
 
 impl Machine {
+    // since toggling on/off is just like XOR
+    // it doesn't matter how exactly many times the buttons
+    // are pressed, just whether they're pressed an even
+    // or odd number of times which for the case of XOR
+    // is the same as 0 or 1 times.
+    //
+    // to make fast, run over all possible combinations
+    // of the toggles where they're either picked or not picked
+    // and track the state they lead to by XORing them.
+    // At the end, if the state matches the goal, this
+    // configuration is a candidate.
     pub fn min_toggles(&self) -> i64 {
         let n = self.bit_toggles.len();
         let mut min = i64::MAX;
@@ -60,7 +93,48 @@ impl Machine {
         min
     }
 
+    // since looping over the value combinations of all variables would take ages,
+    // we can see what variables can be expressed as other
+    // variables and look just run over the value combinations for variables that
+    // can't be expressed as other variables. This can be done through substitution:
+    //
+    // e + f = 3
+    // b + f = 5
+    // c + d + e = 4
+    // a + b + d = 7
+    //
+    // e = 3 - f
+    // b = 5 - f
+    // c = 4 - d - e = 4 - d - (3 - f)
+    // a = 7 - b - d = 7 - (5 - f) - d
+    //
+    // Result:
+    // e = 3 - f
+    // b = 5 - f
+    // c = 1 - d + f
+    // a = 2 + f - d
+    //
+    // Above, all variables have been expressed through f and d, so we need to
+    // loop over value combinations only for f and d.
+    //
+    // Consider the limits for f and d
+    // (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7} becomes
+    // a   b     c   d     e     f
+    //
+    // f is in [0; min(3, 5)]
+    // d is in [0; min(4, 7)]
+    // because that's the most times a button can be pressed.
+    //
+    // Looping over those values for f and d, we can then evaluate all the equations,
+    // since every variable is expressed through f and f
+    // and discard results that are negative as invalid, since a button can't
+    // be pressed a negative number of times.
+    //
+    // If the result of the equation is valid, then we take a + b + c + d + e + f
+    // as a candidate for a minimum.
     pub fn min_toggles_to_counters(&self) -> i64 {
+        // a list of maxes (pre var maxes) compared to a single max(counters)
+        // is just an optimization to have to run through less cases
         let maxes: Vec<i64> = self
             .toggles
             .iter()
