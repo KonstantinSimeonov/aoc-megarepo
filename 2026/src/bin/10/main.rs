@@ -1,5 +1,3 @@
-use std::{collections::HashMap, str::FromStr};
-
 use aoc2026::Inputs;
 
 use crate::equation::{Equation, EquationSystem};
@@ -21,46 +19,24 @@ fn solve(input: &str) {
 
     println!("{} machines", machines.len());
 
-    part1(&machines);
-    part2(&machines);
-}
+    let (part1, part2) = machines.iter().fold(
+        (0, 0),
+        |(part1, part2), m| (part1 + m.min_toggles(), part2 + m.min_toggles_to_counters())
+    );
 
-fn part2(machines: &[Machine]) {
-    let part2 = machines.iter()
-        .map(|m| {
-            let maxes: Vec<i64> = m.toggles.iter().map(
-                |toggle|
-                        toggle
-                            .iter()
-                            .map(|t| m.counters[*t as usize])
-                            .min()
-                            .unwrap()
-            ).collect();
-
-            m.equations.bounds(&maxes).unwrap()
-        }).sum::<i64>();
-
-    println!("part 2: {}", part2);
-}
-
-#[allow(dead_code)]
-fn part1(machines: &[Machine]) {
-    let part1: i64 = machines
-        .iter()
-        .map(|m| {
-            m.min_toggles()
-        })
-        .sum();
-    println!("part 1: {}", part1);
+    println!("part 1: {}, part 2: {}", part1, part2);
 }
 
 #[derive(Debug)]
 struct Machine {
+    // part 1
     bit_goal: i64,
     bit_toggles: Vec<i64>,
+
+    // part 2
     toggles: Vec<Vec<i64>>,
     counters: Vec<i64>,
-    equations: EquationSystem
+    equations: EquationSystem,
 }
 
 impl Machine {
@@ -84,9 +60,25 @@ impl Machine {
 
         min
     }
+
+    pub fn min_toggles_to_counters(&self) -> i64 {
+        let maxes: Vec<i64> = self
+            .toggles
+            .iter()
+            .map(|toggle| {
+                toggle
+                    .iter()
+                    .map(|t| self.counters[*t as usize])
+                    .min()
+                    .unwrap()
+            })
+            .collect();
+
+        self.equations.minimize(&maxes).unwrap()
+    }
 }
 
-impl FromStr for Machine {
+impl std::str::FromStr for Machine {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -102,36 +94,52 @@ impl FromStr for Machine {
             .split_ascii_whitespace()
             .filter(|x| x.starts_with("("))
             .map(strip_brackets)
-            .map(|toggle_str| toggle_str.split(',').map(|n| n.parse::<i64>().unwrap()).collect())
+            .map(|toggle_str| {
+                toggle_str
+                    .split(',')
+                    .map(|n| n.parse::<i64>().unwrap())
+                    .collect()
+            })
             .collect();
 
-        let bit_toggles = toggles.iter().map(|bits_list| {
-                bits_list
-                    .iter()
-                    .fold(0, |n, d| set_bit(n, *d))
-            })
+        let bit_toggles = toggles
+            .iter()
+            .map(|bits_list| bits_list.iter().fold(0, |n, d| set_bit(n, *d)))
             .collect();
 
         let result = rest.split_once(" {").unwrap();
         let counters_str = &result.1[..result.1.len() - 1];
-        let counters: Vec<i64> = counters_str.split(',').map(
-            |n| n.parse::<i64>().unwrap()
-        ).collect();
+        let counters: Vec<i64> = counters_str
+            .split(',')
+            .map(|n| n.parse::<i64>().unwrap())
+            .collect();
 
         let mut equations: Vec<Equation> = vec![];
         for i in 0..counters.len() {
             let mut variables = vec![];
             for toggle in toggles.iter() {
-                let n = if toggle.iter().any(|x| *x == i as i64) { 1 } else { 0 };
+                let n = if toggle.iter().any(|x| *x == i as i64) {
+                    1
+                } else {
+                    0
+                };
                 variables.push(n);
             }
 
-            equations.push(Equation { variables, constant: -counters[i], variable_result: None })
+            equations.push(Equation {
+                variables,
+                constant: -counters[i],
+                variable_result: None,
+            })
         }
 
-
-
-        Ok(Machine { bit_goal, bit_toggles, toggles, counters, equations: EquationSystem { equations } })
+        Ok(Machine {
+            bit_goal,
+            bit_toggles,
+            toggles,
+            counters,
+            equations: EquationSystem { equations },
+        })
     }
 }
 

@@ -4,6 +4,7 @@ pub struct EquationSystem {
 }
 
 impl EquationSystem {
+    #[allow(dead_code)]
     pub fn print(&self) {
         println!("System of {} equations:", self.equations.len());
         for e in self.equations.iter() {
@@ -30,7 +31,7 @@ impl EquationSystem {
         EquationSystem { equations }
     }
 
-    pub fn bounds(&self, uppers: &Vec<i64>) -> Option<i64> {
+    pub fn minimize(&self, uppers: &Vec<i64>) -> Option<i64> {
         let solved = self.substite();
         let solved_vars: Vec<usize> = solved.equations.iter().filter_map(|eq| eq.variable_result).collect();
         let total_vars = self.var_count();
@@ -39,7 +40,7 @@ impl EquationSystem {
             .collect();
 
         let maxes: Vec<i64> = free_vars.iter().map(|var_index| uppers[*var_index]).collect();
-        let min = solved.minimize(&free_vars, &mut vec![0; total_vars], &maxes);
+        let min = solved.minimize_solved(&free_vars, &mut vec![0; total_vars], &maxes);
 
         min
     }
@@ -48,7 +49,7 @@ impl EquationSystem {
         self.equations[0].variables.len()
     }
 
-    pub fn minimize(&self, free: &[usize], values: &mut Vec<i64>, maxes: &[i64]) -> Option<i64> {
+    pub fn minimize_solved(&self, free: &[usize], values: &mut Vec<i64>, maxes: &[i64]) -> Option<i64> {
         if free.is_empty() {
             return self.eval(values)
         }
@@ -57,7 +58,7 @@ impl EquationSystem {
         (0..=maxes[0]).filter_map(
             |v| {
                 values[var] = v;
-                self.minimize(&free[1..], values, &maxes[1..])
+                self.minimize_solved(&free[1..], values, &maxes[1..])
             }
         ).min()
     }
@@ -194,6 +195,7 @@ impl Equation {
                 .sum::<i64>()
     }
 
+    #[allow(dead_code)]
     pub fn print(&self) {
         println!(
             "{:?} + {} = {:?}",
