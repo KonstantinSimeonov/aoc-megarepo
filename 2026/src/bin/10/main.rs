@@ -7,7 +7,9 @@ mod equation;
 
 fn main() {
     let inputs = Inputs::read();
+    println!("===== input 0 =====");
     solve(&inputs.test_inputs[0]);
+    println!("===== input =====");
     solve(&inputs.input);
 }
 
@@ -19,16 +21,13 @@ fn solve(input: &str) {
 
     println!("{} machines", machines.len());
 
-    //part1(&machines);
+    part1(&machines);
     part2(&machines);
 }
 
 fn part2(machines: &[Machine]) {
     let part2 = machines.iter()
         .map(|m| {
-            //println!("{:?}", m);
-            //m.equations.print();
-            //println!("====== bounds ======");
             let maxes: Vec<i64> = m.toggles.iter().map(
                 |toggle|
                         toggle
@@ -41,7 +40,7 @@ fn part2(machines: &[Machine]) {
             m.equations.bounds(&maxes).unwrap()
         }).sum::<i64>();
 
-    println!("{}", part2);
+    println!("part 2: {}", part2);
 }
 
 #[allow(dead_code)]
@@ -52,7 +51,7 @@ fn part1(machines: &[Machine]) {
             m.min_toggles()
         })
         .sum();
-    println!("{}", part1);
+    println!("part 1: {}", part1);
 }
 
 #[derive(Debug)]
@@ -65,116 +64,26 @@ struct Machine {
 }
 
 impl Machine {
-    fn min_toggles(self: &Machine) -> i64 {
-        let mut results = HashMap::<i64, i64>::new();
-        self.calc_min_toggles_to_goal(0, -1, 0, &mut results);
-        //println!("{:?}", results);
-        *results.get(&self.bit_goal).unwrap()
-    }
-
-    fn calc_min_toggles_to_goal(
-        self: &Machine,
-        state: i64,
-        last: i64,
-        depth: i64,
-        results: &mut HashMap<i64, i64>,
-    ) {
-        if let Some(score) = results.get_mut(&state) {
-            if *score <= depth {
-                return
-            }
-
-            *score = depth;
-        } else {
-            results.insert(state, depth);
-        }
-
-        if state == self.bit_goal {
-            return;
-        }
-
-        if let Some(score) = results.get(&self.bit_goal) && *score <= depth {
-            return;
-        }
-
-        for i in 0..self.bit_toggles.len() {
-            if last == self.bit_toggles[i] {
-                continue;
-            }
-
-            self.calc_min_toggles_to_goal(
-                state ^ self.bit_toggles[i],
-                self.bit_toggles[i],
-                depth + 1,
-                results,
-            );
-        }
-    }
-
-    fn min_counters(self: &Machine) -> i64 {
-        let mut results = HashMap::new();
-        let mut state = self.counters.clone();
-        self.calc_min_counters_to_goal(&mut state, 0, &mut results);
-
-        let mut goal = self.counters.clone();
-        goal.fill(0);
-
-        *results.get(&0).unwrap()
-    }
-
-    fn calc_min_counters_to_goal(
-        self: &Machine,
-        state: &mut Vec<i64>,
-        depth: i64,
-        results: &mut HashMap<i64, i64>
-    ) {
-        if let Some(score) = results.get_mut(&hash(state)) {
-            if *score <= depth {
-                return
-            }
-
-            *score = depth;
-        } else {
-            results.insert(hash(state), depth);
-        }
-
-        if state.iter().all(|x| *x == 0) {
-            return
-        }
-
-        if let Some(score) = results.get(&0) && *score <= depth {
-            return;
-        }
-
-        for i in 0..self.toggles.len() {
-            let opt = &self.toggles[i];
-            let mut bad = false;
-            for j in 0..opt.len() {
-                state[opt[j] as usize] -= 1;
-                if state[opt[j] as usize] < 0 {
-                    bad = true;
+    pub fn min_toggles(&self) -> i64 {
+        let n = self.bit_toggles.len();
+        let mut min = i64::MAX;
+        for combination in 0..(1 << n) {
+            let mut state = 0;
+            let mut count = 0;
+            for i in 0..n {
+                if combination & (1 << i) != 0 {
+                    state ^= self.bit_toggles[i];
+                    count += 1;
                 }
             }
 
-            if !bad {
-                self.calc_min_counters_to_goal(state, depth + 1, results);
-            }
-
-            for j in 0..opt.len() {
-                state[opt[j] as usize] += 1;
+            if state == self.bit_goal {
+                min = min.min(count);
             }
         }
-    }
-}
 
-fn hash(xs: &Vec<i64>) -> i64 {
-    let mut h: i64 = 0;
-    let d: i64 = 1000;
-    for i in 0..xs.len() {
-        h += d.pow(i as u32) * xs[i];
+        min
     }
-
-    h
 }
 
 impl FromStr for Machine {
